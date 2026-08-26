@@ -1,0 +1,4 @@
+import { listPublicDirectory } from '@/features/memberships/service'
+import { DirectoryView } from '@/features/directory/components/directory-view'
+export const dynamic='force-dynamic'
+export default async function DirectoryEmbed({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){const p=await searchParams;const rows=await listPublicDirectory({type:p.type,province:p.province,search:p.q});return <main className="bg-white p-3"><form className="mb-4 grid gap-2 sm:grid-cols-[1fr_150px_auto]"><input className="apse-input" name="q" placeholder="Nombre" defaultValue={p.q}/><select className="apse-input" name="type" defaultValue={p.type}><option value="">Todos</option><option value="professional">Profesionales</option><option value="school">Escuelas</option></select><button className="apse-button">Buscar</button></form><DirectoryView rows={rows} compact/></main>}

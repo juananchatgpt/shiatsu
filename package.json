@@ -1,0 +1,44 @@
+{
+  "name": "apse-socios",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "db:apply": "tsx scripts/apply-schema.ts",
+    "db:test": "tsx scripts/test-db.ts",
+    "user:create": "tsx scripts/create-user.ts",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "wp:inspect": "tsx scripts/import-wordpress-users.ts --dry-run",
+    "wp:import": "tsx scripts/import-wordpress-users.ts --apply",
+    "test": "node --import tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "csv-parse": "^5.6.0",
+    "next": "^16.0.0",
+    "nodemailer": "^9.0.5",
+    "pg": "^8.13.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^6.4.16",
+    "@types/pg": "^8.11.10",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.0.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

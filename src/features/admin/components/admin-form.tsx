@@ -1,0 +1,4 @@
+'use client'
+import{useActionState}from'react'
+import{createAdminAccount}from'@/actions/admin'
+export function AdminForm(){const[state,action,pending]=useActionState(createAdminAccount,null);return <form action={action} className="apse-card space-y-4 p-6"><h2 className="text-xl font-semibold">Nueva cuenta</h2><div><label className="apse-label">Nombre</label><input className="apse-input" name="fullName" required/></div><div><label className="apse-label">Email</label><input className="apse-input" name="email" type="email" required/></div><div><label className="apse-label">Contraseña temporal</label><input className="apse-input" name="password" type="password" minLength={8} required/></div>{state?.error&&<p className="text-sm text-red-700">{state.error}</p>}{state?.ok&&<p className="text-sm text-emerald-700">Administrador creado.</p>}<button className="apse-button" disabled={pending}>{pending?'Creando…':'Crear administrador'}</button></form>}

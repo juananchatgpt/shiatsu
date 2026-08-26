@@ -1,0 +1,8 @@
+import { SiteHeader } from '@/components/site-header'
+import { listPublicDirectory } from '@/features/memberships/service'
+import { DirectoryView } from '@/features/directory/components/directory-view'
+import { SPANISH_PROVINCES } from '@/lib/domain'
+
+export const dynamic='force-dynamic'
+export default async function DirectoryPage({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){const p=await searchParams;const rows=await listPublicDirectory({type:p.type,province:p.province,search:p.q});return <><SiteHeader/><main className="apse-container py-12"><div className="max-w-3xl"><p className="text-sm font-bold uppercase tracking-widest text-[var(--apse-clay)]">Directorio APSE</p><h1 className="mt-2 text-4xl font-semibold text-emerald-950">Busca profesionales y escuelas</h1><p className="mt-3 text-stone-600">Solo aparecen socios activos que han decidido publicar su perfil.</p></div><DirectoryFilters p={p}/><DirectoryView rows={rows}/></main></>}
+export function DirectoryFilters({p}:{p:Record<string,string|undefined>}){return <form className="apse-card my-8 grid gap-3 p-4 md:grid-cols-[1fr_190px_220px_auto]"><input className="apse-input" name="q" placeholder="Nombre o escuela" defaultValue={p.q}/><select className="apse-input" name="type" defaultValue={p.type}><option value="">Profesionales y escuelas</option><option value="professional">Profesionales</option><option value="school">Escuelas</option></select><select className="apse-input" name="province" defaultValue={p.province}><option value="">Todas las provincias</option>{SPANISH_PROVINCES.map(v=><option key={v}>{v}</option>)}</select><button className="apse-button">Buscar</button></form>}

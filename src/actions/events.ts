@@ -1,0 +1,59 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { requireAdmin, requireUser, getMembershipContext, canCreateEvents } from '@/lib/access'
+import { query, withTransaction } from '@/lib/db'
+import { EVENT_STATUSES } from '@/lib/domain'
+import { eventSchema } from '@/lib/validation'
+import type { ActionState } from './memberships'
+
+const checked=(f:FormData,n:string)=>f.get(n)==='on'
+const text=(f:FormData,n:string)=>String(f.get(n)??'')
+
+export async function createEvent(_prev:ActionState|null, form:FormData):Promise<ActionState> {
+  const user=await requireUser(); const membership=await getMembershipContext(user.id)
+  if(!canCreateEvents(membership)) return {error:'Solo profesionales y escuelas activos pueden crear eventos'}
+  const parsed=eventSchema.safeParse({title:text(form,'title'),description:text(form,'description'),startsAt:text(form,'startsAt'),
+    endsAt:text(form,'endsAt'),allDay:checked(form,'allDay'),modality:text(form,'modality'),venueName:text(form,'venueName'),
+    address:text(form,'address'),city:text(form,'city'),province:text(form,'province'),postalCode:text(form,'postalCode'),
+    registrationUrl:text(form,'registrationUrl'),publicContact:text(form,'publicContact'),isFree:checked(form,'isFree'),
+    priceEuros:text(form,'priceEuros')?Number(text(form,'priceEuros')):undefined,imageUrl:text(form,'imageUrl')})
+  if(!parsed.success) return {error:parsed.error.issues[0]?.message??'Revisa los datos'}
+  const d=parsed.data
+  try {
+    const rows=await query<{id:string}>(`INSERT INTO events(organizer_membership_id,title,description,image_url,starts_at,ends_at,all_day,
+      modality,venue_name,address,city,province,postal_code,registration_url,public_contact,is_free,price_cents,status,submitted_at)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,'pending_review',now()) RETURNING id`,
+      [membership!.membership_id,d.title,d.description,d.imageUrl||null,new Date(d.startsAt).toISOString(),new Date(d.endsAt).toISOString(),
+        d.allDay,d.modality,d.venueName||null,d.address||null,d.city||null,d.province||null,d.postalCode||null,
+        d.registrationUrl||null,d.publicContact||null,d.isFree,d.isFree?null:Math.round((d.priceEuros??0)*100)])
+    await query(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'event.submitted','event',$2)`,[user.id,rows[0].id])
+    revalidatePath('/mis-eventos'); return {ok:true}
+  }catch(error){console.error('createEvent',error);return{error:'No se pudo enviar el evento'}}
+}
+
+export async function updateEvent(_prev:ActionState|null,form:FormData):Promise<ActionState>{
+  const user=await requireUser();const membership=await getMembershipContext(user.id)
+  if(!canCreateEvents(membership))return{error:'No tienes permiso para editar eventos'}
+  const id=text(form,'eventId')
+  const parsed=eventSchema.safeParse({title:text(form,'title'),description:text(form,'description'),startsAt:text(form,'startsAt'),endsAt:text(form,'endsAt'),allDay:checked(form,'allDay'),modality:text(form,'modality'),venueName:text(form,'venueName'),address:text(form,'address'),city:text(form,'city'),province:text(form,'province'),postalCode:text(form,'postalCode'),registrationUrl:text(form,'registrationUrl'),publicContact:text(form,'publicContact'),isFree:checked(form,'isFree'),priceEuros:text(form,'priceEuros')?Number(text(form,'priceEuros')):undefined,imageUrl:text(form,'imageUrl')})
+  if(!parsed.success)return{error:parsed.error.issues[0]?.message??'Revisa los datos'}
+  const d=parsed.data
+  const rows=await query<{id:string}>(`UPDATE events SET title=$1,description=$2,image_url=$3,starts_at=$4,ends_at=$5,all_day=$6,modality=$7,
+    venue_name=$8,address=$9,city=$10,province=$11,postal_code=$12,registration_url=$13,public_contact=$14,is_free=$15,
+    price_cents=$16,status='pending_review',submitted_at=now(),reviewed_by=NULL,reviewed_at=NULL,updated_at=now()
+    WHERE id=$17 AND organizer_membership_id=$18 RETURNING id`,[d.title,d.description,d.imageUrl||null,new Date(d.startsAt).toISOString(),new Date(d.endsAt).toISOString(),d.allDay,d.modality,d.venueName||null,d.address||null,d.city||null,d.province||null,d.postalCode||null,d.registrationUrl||null,d.publicContact||null,d.isFree,d.isFree?null:Math.round((d.priceEuros??0)*100),id,membership!.membership_id])
+  if(!rows[0])return{error:'Evento no encontrado'}
+  await query(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'event.updated_resubmitted','event',$2)`,[user.id,id])
+  revalidatePath('/mis-eventos');revalidatePath('/eventos');return{ok:true}
+}
+
+export async function reviewEvent(form:FormData) {
+  const admin=await requireAdmin(); const id=text(form,'eventId'); const status=text(form,'status'); const notes=text(form,'notes')
+  if(!EVENT_STATUSES.includes(status as (typeof EVENT_STATUSES)[number])||!['approved','rejected','cancelled'].includes(status)) return
+  await withTransaction(async tx=>{
+    await tx(`UPDATE events SET status=$1,moderation_notes=$2,reviewed_by=$3,reviewed_at=now(),updated_at=now() WHERE id=$4`,[status,notes||null,admin.id,id])
+    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'event.reviewed','event',$2,$3::jsonb)`,[admin.id,id,JSON.stringify({status})])
+  })
+  revalidatePath('/admin/eventos'); revalidatePath('/eventos'); revalidatePath('/embed/eventos')
+}

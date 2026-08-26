@@ -1,0 +1,27 @@
+'use client'
+
+import { useActionState } from 'react'
+import Link from 'next/link'
+import { registerMember } from '@/actions/memberships'
+import { formatMoney, FEES_CENTS, INSURANCE_FEE_CENTS, memberTypeLabels, SPANISH_PROVINCES, type MemberType } from '@/lib/domain'
+
+export function RegistrationForm({memberType}:{memberType:MemberType}){
+  const [state,action,pending]=useActionState(registerMember,null)
+  if(state?.ok)return <div className="apse-card mx-auto max-w-2xl p-10 text-center"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-2xl text-emerald-800">✓</div><h1 className="mt-5 text-3xl font-semibold text-emerald-950">Solicitud recibida</h1><p className="mt-3 text-stone-600">APSE revisará el alta. Podrás entrar con tus credenciales y consultar su estado.</p><Link className="apse-button mt-7" href="/login">Ir al acceso</Link></div>
+  const publicProfile=memberType!=='student'
+  return <div className="mx-auto max-w-4xl"><div className="mb-8"><Link href="/registro" className="text-sm text-stone-500">← Cambiar tipo</Link><p className="mt-6 text-sm font-bold uppercase tracking-widest text-[var(--apse-clay)]">Solicitud de alta</p><h1 className="mt-2 text-4xl font-semibold text-emerald-950">{memberTypeLabels[memberType]}</h1><p className="mt-2 text-stone-600">Cuota anual: {formatMoney(FEES_CENTS[memberType])}{publicProfile?' · Seguro opcional +'+formatMoney(INSURANCE_FEE_CENTS):''}</p></div>
+    <form action={action} className="space-y-6"><input type="hidden" name="memberType" value={memberType}/><div className="hidden" aria-hidden="true"><label>No rellenar<input name="website_confirm" tabIndex={-1} autoComplete="off"/></label></div>
+      <Section title="Datos de acceso y contacto"><div className="grid gap-5 md:grid-cols-2"><Field name="firstName" label={memberType==='school'?'Nombre de la persona de contacto':'Nombre'} required/><Field name="lastName" label="Apellidos" required={memberType!=='school'}/><Field name="identityDocument" label="DNI / NIE" required/><Field name="phone" label="Teléfono" type="tel" required/><Field name="email" label="Email de acceso" type="email" required/><Field name="password" label="Contraseña (mínimo 8 caracteres)" type="password" required/></div></Section>
+      {memberType==='student'&&<Section title="Formación"><Field name="schoolOrigin" label="Escuela de procedencia" required/></Section>}
+      {memberType==='school'&&<Section title="Vinculación de la escuela"><div className="grid gap-5 md:grid-cols-2"><Field name="schoolName" label="Nombre de la escuela" required/><Field name="responsibleMemberNumber" label="N.º de socio del profesional responsable" required/></div><p className="mt-3 text-sm text-stone-500">El profesional debe estar activo y no tener otra escuela vinculada.</p></Section>}
+      {publicProfile&&<><Section title="Opciones"><label className="flex gap-3 rounded-xl border border-stone-200 p-4"><input type="checkbox" name="insuranceSelected" className="mt-1"/><span><strong className="block">Añadir seguro (+20 € al año)</strong><span className="text-sm text-stone-500">Se incluirá en la cuota anual cuando se active la gestión de pagos.</span></span></label><label className="mt-3 flex gap-3 rounded-xl border border-stone-200 p-4"><input type="checkbox" name="directoryOptIn" className="mt-1"/><span><strong className="block">Quiero aparecer en el directorio</strong><span className="text-sm text-stone-500">Solo se publicará cuando el alta esté aprobada. Podrás cambiarlo después.</span></span></label></Section>
+      <Section title="Ficha pública opcional"><div className="grid gap-5 md:grid-cols-2"><Field name="publicName" label={memberType==='school'?'Nombre público':'Nombre profesional'}/><Field name="publicEmail" label="Email público" type="email"/><Field name="publicPhone" label="Teléfono público"/><Field name="publicCity" label="Municipio"/><SelectProvince name="publicProvince"/><Field name="website" label="Web" type="url"/></div><label className="apse-label mt-5" htmlFor="bio">Presentación</label><textarea className="apse-input min-h-32" id="bio" name="bio" maxLength={2500}/></Section></>}
+      <Section title="Privacidad"><label className="flex items-start gap-3"><input type="checkbox" name="privacyAccepted" className="mt-1" required/><span className="text-sm text-stone-600">He leído y acepto la política de privacidad y autorizo el tratamiento de mis datos para gestionar la membresía.</span></label></Section>
+      {state?.error&&<p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{state.error}</p>}
+      <button className="apse-button w-full sm:w-auto" disabled={pending}>{pending?'Enviando…':'Enviar solicitud'}</button>
+    </form></div>
+}
+
+function Section({title,children}:{title:string;children:React.ReactNode}){return <section className="apse-card p-6 sm:p-8"><h2 className="mb-5 text-xl font-semibold text-emerald-950">{title}</h2>{children}</section>}
+function Field({name,label,type='text',required=false}:{name:string;label:string;type?:string;required?:boolean}){return <div><label className="apse-label" htmlFor={name}>{label}{required?' *':''}</label><input className="apse-input" id={name} name={name} type={type} required={required}/></div>}
+function SelectProvince({name}:{name:string}){return <div><label className="apse-label" htmlFor={name}>Provincia</label><select className="apse-input" id={name} name={name}><option value="">Seleccionar</option>{SPANISH_PROVINCES.map(p=><option key={p}>{p}</option>)}</select></div>}

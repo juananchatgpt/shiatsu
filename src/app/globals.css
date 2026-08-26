@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --apse-ink: #1f342c;
+  --apse-green: #315747;
+  --apse-green-light: #dce7df;
+  --apse-cream: #f5f1e8;
+  --apse-clay: #b8664f;
+  --apse-gold: #c7a763;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(199, 167, 99, .12), transparent 28rem),
+    #faf9f6;
+}
+
+::selection { background: var(--apse-green-light); color: var(--apse-ink); }
+
+@layer components {
+  .apse-container { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
+  .apse-card { @apply rounded-2xl border border-stone-200 bg-white shadow-sm; }
+  .apse-input { @apply w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10; }
+  .apse-label { @apply mb-1.5 block text-sm font-medium text-slate-700; }
+  .apse-button { @apply inline-flex items-center justify-center rounded-xl bg-emerald-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50; }
+  .apse-button-secondary { @apply inline-flex items-center justify-center rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-stone-50; }
+  .apse-pill { @apply inline-flex rounded-full px-2.5 py-1 text-xs font-semibold; }
+}

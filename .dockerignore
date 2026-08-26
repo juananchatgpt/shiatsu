@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.env*
+!.env.local.example
+DATOS.txt
+Prompt.docx
+ReunionMarila.m4a
+user-export-*.csv
+private-uploads
+migration-reports

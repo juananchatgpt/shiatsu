@@ -1,0 +1,115 @@
+'use server'
+
+import { hashPassword } from '@/lib/auth'
+import { query, withTransaction } from '@/lib/db'
+import { FEES_CENTS, INSURANCE_FEE_CENTS, type MemberType } from '@/lib/domain'
+import { registrationSchema, profileSchema } from '@/lib/validation'
+import { requireUser } from '@/lib/access'
+import { checkPublicRateLimit } from '@/lib/rate-limit'
+
+export interface ActionState { ok?: boolean; error?: string }
+const checked = (form: FormData, name: string) => form.get(name) === 'on'
+const text = (form: FormData, name: string) => String(form.get(name) ?? '')
+
+export async function registerMember(_prev: ActionState | null, form: FormData): Promise<ActionState> {
+  if(text(form,'website_confirm'))return{ok:true}
+  if(!await checkPublicRateLimit('registration',8,60))return{error:'Demasiados intentos. Prueba de nuevo más tarde.'}
+  const parsed = registrationSchema.safeParse({
+    memberType: text(form, 'memberType'), firstName: text(form, 'firstName'), lastName: text(form, 'lastName'),
+    identityDocument: text(form, 'identityDocument'), phone: text(form, 'phone'), email: text(form, 'email'),
+    password: text(form, 'password'), privacyAccepted: text(form, 'privacyAccepted'),
+    schoolOrigin: text(form, 'schoolOrigin'), responsibleMemberNumber: text(form, 'responsibleMemberNumber'),
+    schoolName: text(form, 'schoolName'), insuranceSelected: checked(form, 'insuranceSelected'),
+    directoryOptIn: checked(form, 'directoryOptIn'), publicName: text(form, 'publicName'),
+    publicEmail: text(form, 'publicEmail'), publicPhone: text(form, 'publicPhone'),
+    publicProvince: text(form, 'publicProvince'), publicCity: text(form, 'publicCity'),
+    website: text(form, 'website'), bio: text(form, 'bio'),
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
+  const data = parsed.data
+  try {
+    await withTransaction(async (tx) => {
+      let responsibleId: string | null = null
+      if (data.memberType === 'school') {
+        const responsible = await tx<{ id: string }>(
+          `SELECT m.id FROM memberships m
+           WHERE m.member_number=$1 AND m.member_type='professional' AND m.status='active'
+           AND NOT EXISTS (SELECT 1 FROM school_profiles s WHERE s.responsible_professional_membership_id=m.id)
+           LIMIT 1`, [data.responsibleMemberNumber],
+        )
+        if (!responsible[0]) throw new Error('RESPONSIBLE_NOT_FOUND')
+        responsibleId = responsible[0].id
+      }
+      const users = await tx<{ id: string }>(
+        `INSERT INTO users (email,password_hash,full_name,role) VALUES ($1,$2,$3,'member') RETURNING id`,
+        [data.email, await hashPassword(data.password), `${data.firstName} ${data.lastName}`.trim()],
+      )
+      const insuranceAllowed = data.memberType !== 'student' && data.insuranceSelected
+      const memberships = await tx<{ id: string }>(
+        `INSERT INTO memberships (user_id,member_type,status,insurance_selected,base_fee_cents,insurance_fee_cents,directory_opt_in,privacy_accepted_at)
+         VALUES ($1,$2,'pending',$3,$4,$5,$6,now()) RETURNING id`,
+        [users[0].id, data.memberType, insuranceAllowed, FEES_CENTS[data.memberType], insuranceAllowed ? INSURANCE_FEE_CENTS : 0,
+          data.memberType !== 'student' && data.directoryOptIn],
+      )
+      const membershipId = memberships[0].id
+      await tx(
+        `INSERT INTO member_profiles (membership_id,first_name,last_name,identity_document,phone,public_name,public_email,public_phone,public_city,public_province,website,bio)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+        [membershipId, data.firstName, data.lastName, data.identityDocument, data.phone, data.publicName || null,
+          data.publicEmail || null, data.publicPhone || null, data.publicCity || null, data.publicProvince || null,
+          data.website || null, data.bio || null],
+      )
+      if (data.memberType === 'student') await tx('INSERT INTO student_profiles (membership_id,school_origin) VALUES ($1,$2)', [membershipId, data.schoolOrigin])
+      if (data.memberType === 'professional') await tx('INSERT INTO professional_profiles (membership_id) VALUES ($1)', [membershipId])
+      if (data.memberType === 'school') await tx(
+        'INSERT INTO school_profiles (membership_id,responsible_professional_membership_id,school_name) VALUES ($1,$2,$3)',
+        [membershipId, responsibleId, data.schoolName],
+      )
+      await tx(`INSERT INTO audit_log (action,entity_type,entity_id,details) VALUES ('membership.registered','membership',$1,$2::jsonb)`,
+        [membershipId, JSON.stringify({ memberType: data.memberType })])
+    })
+    return { ok: true }
+  } catch (error) {
+    if (error instanceof Error && error.message === 'RESPONSIBLE_NOT_FOUND') return { error: 'El profesional responsable no existe, no está activo o ya tiene una escuela' }
+    if (typeof error === 'object' && error && 'code' in error && error.code === '23505') return { error: 'Ya existe una cuenta con ese email' }
+    console.error('registerMember', error)
+    return { error: 'No se pudo completar el alta. Inténtalo de nuevo.' }
+  }
+}
+
+export async function updateProfile(_prev: ActionState | null, form: FormData): Promise<ActionState> {
+  const user = await requireUser()
+  const parsed = profileSchema.safeParse({
+    email:text(form,'email'), firstName:text(form,'firstName'), lastName:text(form,'lastName'),
+    identityDocument:text(form,'identityDocument'), phone:text(form,'phone'), secondaryPhone:text(form,'secondaryPhone'),
+    address:text(form,'address'), postalCode:text(form,'postalCode'), city:text(form,'city'), province:text(form,'province'),
+    directoryOptIn:checked(form,'directoryOptIn'), publicName:text(form,'publicName'), publicEmail:text(form,'publicEmail'),
+    publicPhone:text(form,'publicPhone'), publicAddress:text(form,'publicAddress'), publicPostalCode:text(form,'publicPostalCode'),
+    publicCity:text(form,'publicCity'), publicProvince:text(form,'publicProvince'), website:text(form,'website'), bio:text(form,'bio'),
+    facebookUrl:text(form,'facebookUrl'), instagramUrl:text(form,'instagramUrl'), youtubeUrl:text(form,'youtubeUrl'),
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
+  const d = parsed.data
+  try {
+    await withTransaction(async (tx) => {
+      const memberships = await tx<{ id:string; member_type:MemberType }>('SELECT id,member_type FROM memberships WHERE user_id=$1 LIMIT 1',[user.id])
+      if (!memberships[0]) throw new Error('NO_MEMBERSHIP')
+      const m=memberships[0]
+      await tx('UPDATE users SET email=$1,full_name=$2,updated_at=now() WHERE id=$3',[d.email,`${d.firstName} ${d.lastName}`.trim(),user.id])
+      await tx(`UPDATE memberships SET directory_opt_in=$1,updated_at=now() WHERE id=$2`,[m.member_type !== 'student' && d.directoryOptIn,m.id])
+      await tx(`UPDATE member_profiles SET first_name=$1,last_name=$2,identity_document=$3,phone=$4,secondary_phone=$5,address=$6,
+        postal_code=$7,city=$8,province=$9,public_name=$10,public_email=$11,public_phone=$12,public_address=$13,
+        public_postal_code=$14,public_city=$15,public_province=$16,website=$17,bio=$18,facebook_url=$19,
+        instagram_url=$20,youtube_url=$21,updated_at=now() WHERE membership_id=$22`,
+        [d.firstName,d.lastName,d.identityDocument||null,d.phone||null,d.secondaryPhone||null,d.address||null,d.postalCode||null,
+          d.city||null,d.province||null,d.publicName||null,d.publicEmail||null,d.publicPhone||null,d.publicAddress||null,
+          d.publicPostalCode||null,d.publicCity||null,d.publicProvince||null,d.website||null,d.bio||null,
+          d.facebookUrl||null,d.instagramUrl||null,d.youtubeUrl||null,m.id])
+      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'membership.profile_updated','membership',$2)`,[user.id,m.id])
+    })
+    return { ok:true }
+  } catch(error) {
+    if (typeof error === 'object' && error && 'code' in error && error.code === '23505') return { error:'Ese email ya está en uso' }
+    console.error('updateProfile',error); return { error:'No se pudieron guardar los cambios' }
+  }
+}
