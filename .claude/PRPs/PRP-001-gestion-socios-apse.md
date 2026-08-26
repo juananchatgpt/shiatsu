@@ -425,6 +425,7 @@ ejecución definitiva autorizada expresamente.
 - **Seguridad**: incorporaciones fiables como inactivas y sin directorio; excluir pre-registros,
   pruebas, administradores técnicos, hashes e IBAN.
 - **Datos**: Twitter/X y docencia se estructuran; observaciones históricas son notas internas.
+- **Resultado**: 4 altas importadas (2 alumnos y 2 profesionales), 404 socios totales y cero correos.
 
 ### 2026-08-26: documentos pequeños dentro de PostgreSQL
 - **Decisión**: APSE prevé pocos PDF/imágenes; se almacenan como `BYTEA` con límite de 5 MB.

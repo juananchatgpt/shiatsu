@@ -17,9 +17,11 @@
   correos. Tres referencias estaban rotas. Directorio: 88 fotos profesionales y 5 de escuelas;
   alumnos siempre privados. Snapshot: `backup_pre_photo_import_20260826`.
 - Segundo export de directorio revisado: 414 filas; 400 coinciden exactamente por email con la
-  importación principal. Hay 4 socios adicionales fiables y clasificables todavía sin importar,
-  5 pre-registros incompletos, 3 cuentas de prueba/técnicas, 1 administrador técnico y Barry
-  Davidson (#119) sin email. El adjunto desapareció de Downloads antes de poder ejecutar el alta.
+  importación principal. Se importaron 4 socios adicionales fiables (2 alumnos y 2 profesionales)
+  como inactivos y sin directorio, sin correos. Se excluyeron 5 pre-registros incompletos, 3 cuentas
+  de prueba/técnicas, 1 administrador técnico y Barry Davidson (#119), que carece de email.
+- Recuento tras el segundo import: 404 socios; 180 activos y 224 inactivos; 138 alumnos, 254
+  profesionales y 12 escuelas. Hay 386 números conservados y 18 perfiles sin número.
 - Migración `004` aplicada: Twitter/X (3), nivel docente (9), escuelas donde imparte (7), año de
   inicio docente (8) y observaciones a notas internas (149). Snapshot:
   `backup_pre_directory_import_20260826`.

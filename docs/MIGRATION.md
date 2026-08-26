@@ -55,3 +55,12 @@ npm run directory:import -- "C:\ruta\user-export.csv"
 No envía emails. La migración `004_directory_export_fields.sql` estructura X/Twitter, nivel de
 enseñanza, escuelas donde imparte y año de inicio docente, además de recuperar las observaciones
 históricas en las notas internas. IBAN y contraseñas se excluyen.
+
+### Ejecución del segundo export · 26-08-2026
+
+- 414 filas analizadas: 400 coincidencias exactas y 14 filas sin cuenta en la aplicación.
+- 4 socios fiables importados como inactivos y no visibles: 2 alumnos y 2 profesionales.
+- Excluidos: 5 pre-registros, 3 pruebas/técnicos, 1 administrador técnico y 1 socio sin email.
+- Resultado total: 404 socios; 180 activos y 224 inactivos.
+- La simulación posterior devolvió cero incorporaciones. No se envió ningún correo.
+- Instantánea previa: `backup_pre_directory_import_20260826`.
