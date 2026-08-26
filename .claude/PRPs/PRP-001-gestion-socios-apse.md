@@ -410,6 +410,11 @@ ejecución definitiva autorizada expresamente.
 - **Fix**: mapper explícito probado que solo devuelve el contrato público.
 - **Apply to**: cualquier API o widget público nuevo.
 
+### 2026-08-26: importación WordPress ejecutada sin comunicaciones
+- **Resultado**: 400 socios creados y reconciliados desde 401 filas; una carecía de email.
+- **Seguridad**: no se conservaron hashes, tokens, nonces ni IBAN y no se invocó SMTP.
+- **Incidencias**: 16 números pendientes y una escuela sin profesional requieren revisión manual.
+
 ### 2026-08-26: documentos pequeños dentro de PostgreSQL
 - **Decisión**: APSE prevé pocos PDF/imágenes; se almacenan como `BYTEA` con límite de 5 MB.
 - **Seguridad**: descarga autenticada, autorización por propietario/administrador y respuesta `no-store`.

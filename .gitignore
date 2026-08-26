@@ -70,7 +70,8 @@ Thumbs.db
 /DATOS.txt
 /Prompt.docx
 /ReunionMarila.m4a
-/user-export-*.csv
+**/user-export-*.csv
+/tmp/
 /private-uploads/
 /migration-reports/
 
