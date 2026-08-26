@@ -16,7 +16,14 @@
 - Imágenes migradas a PostgreSQL: 181 (149 profesionales, 8 escuelas, 24 alumnos; 7,6 MB), sin
   correos. Tres referencias estaban rotas. Directorio: 88 fotos profesionales y 5 de escuelas;
   alumnos siempre privados. Snapshot: `backup_pre_photo_import_20260826`.
-- PostgreSQL `shiatsu` conectado y migraciones `001`/`002` aplicadas el 2026-08-26.
+- Segundo export de directorio revisado: 414 filas; 400 coinciden exactamente por email con la
+  importación principal. Hay 4 socios adicionales fiables y clasificables todavía sin importar,
+  5 pre-registros incompletos, 3 cuentas de prueba/técnicas, 1 administrador técnico y Barry
+  Davidson (#119) sin email. El adjunto desapareció de Downloads antes de poder ejecutar el alta.
+- Migración `004` aplicada: Twitter/X (3), nivel docente (9), escuelas donde imparte (7), año de
+  inicio docente (8) y observaciones a notas internas (149). Snapshot:
+  `backup_pre_directory_import_20260826`.
+- PostgreSQL `shiatsu` conectado y migraciones `001` a `004` aplicadas el 2026-08-26.
 - Primer administrador: Juanan Sanchez (`jnansanler@gmail.com`), activación enviada por SMTP.
 - GitHub remoto configurado y rama `main` publicada en `juananchatgpt/shiatsu`.
 - SMTP validado tras corregir `SMTP_SECURE=true` para el puerto 465; invitación entregada al servidor.
@@ -42,6 +49,8 @@
 - Importados no conservan hashes de acceso; requieren recuperación de contraseña.
 - Por instrucción expresa, la migración no envía ningún correo; cada socio recuperará su contraseña
   individualmente cuando necesite acceder.
+- El segundo importador solo crea socios fiables como `inactive` y sin directorio; excluye
+  pre-registros, pruebas, administradores técnicos, contraseñas e IBAN.
 - `legacy_data` conserva metadatos privados salvo credenciales, tokens, nonces e IBAN.
 
 ## Operación

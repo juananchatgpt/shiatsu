@@ -420,6 +420,12 @@ ejecución definitiva autorizada expresamente.
 - **Privacidad**: alumnos nunca públicos; profesional/escuela solo con estado activo y opt-in.
 - **Seguridad**: límite de 5 MB, MIME permitido y validación de firma binaria antes de almacenar.
 
+### 2026-08-26: segundo export del directorio
+- **Reconciliación**: primero email, después número de socio y DNI/NIE; nunca crear duplicados.
+- **Seguridad**: incorporaciones fiables como inactivas y sin directorio; excluir pre-registros,
+  pruebas, administradores técnicos, hashes e IBAN.
+- **Datos**: Twitter/X y docencia se estructuran; observaciones históricas son notas internas.
+
 ### 2026-08-26: documentos pequeños dentro de PostgreSQL
 - **Decisión**: APSE prevé pocos PDF/imágenes; se almacenan como `BYTEA` con límite de 5 MB.
 - **Seguridad**: descarga autenticada, autorización por propietario/administrador y respuesta `no-store`.

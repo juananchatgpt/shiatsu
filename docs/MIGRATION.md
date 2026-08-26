@@ -35,3 +35,23 @@ requieren restablecimiento de contraseña.
 - Instantánea previa: esquema PostgreSQL `backup_pre_photo_import_20260826`.
 - Profesionales y escuelas pueden sustituir o eliminar la imagen desde su perfil. Los alumnos pueden
   eliminar la imagen histórica, pero no subir una nueva ni aparecer en el directorio.
+
+## Segundo export del directorio
+
+Se inspecciona sin escribir con:
+
+```powershell
+npm run directory:inspect -- "C:\ruta\user-export.csv"
+```
+
+El importador secundario solo admite filas clasificables como alumno o profesional, descarta
+pre-registros y cuentas de prueba/técnicas, evita duplicados por email, número y DNI/NIE, y crea
+las incorporaciones como `inactive` y sin visibilidad pública. Solo tras revisar la simulación:
+
+```powershell
+npm run directory:import -- "C:\ruta\user-export.csv"
+```
+
+No envía emails. La migración `004_directory_export_fields.sql` estructura X/Twitter, nivel de
+enseñanza, escuelas donde imparte y año de inicio docente, además de recuperar las observaciones
+históricas en las notas internas. IBAN y contraseñas se excluyen.

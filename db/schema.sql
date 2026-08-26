@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS member_profiles (
   first_name TEXT NOT NULL, last_name TEXT NOT NULL DEFAULT '', identity_document TEXT, phone TEXT, secondary_phone TEXT,
   address TEXT, postal_code TEXT, city TEXT, province TEXT, public_name TEXT, public_email TEXT, public_phone TEXT,
   public_address TEXT, public_postal_code TEXT, public_city TEXT, public_province TEXT, website TEXT, bio TEXT,
-  facebook_url TEXT, instagram_url TEXT, youtube_url TEXT, photo_url TEXT,
+  facebook_url TEXT, instagram_url TEXT, youtube_url TEXT, twitter_url TEXT, photo_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS student_profiles (
@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS student_profiles (
 );
 CREATE TABLE IF NOT EXISTS professional_profiles (
   membership_id UUID PRIMARY KEY REFERENCES memberships(id) ON DELETE CASCADE,
-  training_school TEXT, qualification_summary TEXT
+  training_school TEXT, qualification_summary TEXT, teaching_level TEXT, teaching_schools TEXT,
+  teaching_since_year INTEGER CHECK (teaching_since_year IS NULL OR teaching_since_year BETWEEN 1900 AND 2100)
 );
 CREATE TABLE IF NOT EXISTS school_profiles (
   membership_id UUID PRIMARY KEY REFERENCES memberships(id) ON DELETE CASCADE,

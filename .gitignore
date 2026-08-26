@@ -74,6 +74,7 @@ Thumbs.db
 /tmp/
 /private-uploads/
 /migration-reports/
+/docs/PDF/
 
 # Supabase
 supabase/.branches

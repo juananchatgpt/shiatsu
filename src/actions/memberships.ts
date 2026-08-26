@@ -90,9 +90,10 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
     directoryOptIn:checked(form,'directoryOptIn'), publicName:text(form,'publicName'), publicEmail:text(form,'publicEmail'),
     publicPhone:text(form,'publicPhone'), publicAddress:text(form,'publicAddress'), publicPostalCode:text(form,'publicPostalCode'),
     publicCity:text(form,'publicCity'), publicProvince:text(form,'publicProvince'), website:text(form,'website'), bio:text(form,'bio'),
-    facebookUrl:text(form,'facebookUrl'), instagramUrl:text(form,'instagramUrl'), youtubeUrl:text(form,'youtubeUrl'),
+    facebookUrl:text(form,'facebookUrl'), instagramUrl:text(form,'instagramUrl'), youtubeUrl:text(form,'youtubeUrl'),twitterUrl:text(form,'twitterUrl'),
     insuranceSelected:checked(form,'insuranceSelected'),schoolOrigin:text(form,'schoolOrigin'),trainingSchool:text(form,'trainingSchool'),
-    qualificationSummary:text(form,'qualificationSummary'),schoolName:text(form,'schoolName'),schoolDescription:text(form,'schoolDescription'),
+    qualificationSummary:text(form,'qualificationSummary'),teachingLevel:text(form,'teachingLevel'),teachingSchools:text(form,'teachingSchools'),
+    teachingSinceYear:text(form,'teachingSinceYear'),schoolName:text(form,'schoolName'),schoolDescription:text(form,'schoolDescription'),
     programSummary:text(form,'programSummary'),teachersSummary:text(form,'teachersSummary'),directionExperienceSummary:text(form,'directionExperienceSummary'),
   })
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
@@ -109,13 +110,15 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
       await tx(`UPDATE member_profiles SET first_name=$1,last_name=$2,identity_document=$3,phone=$4,secondary_phone=$5,address=$6,
         postal_code=$7,city=$8,province=$9,public_name=$10,public_email=$11,public_phone=$12,public_address=$13,
         public_postal_code=$14,public_city=$15,public_province=$16,website=$17,bio=$18,facebook_url=$19,
-        instagram_url=$20,youtube_url=$21,updated_at=now() WHERE membership_id=$22`,
+        instagram_url=$20,youtube_url=$21,twitter_url=$22,updated_at=now() WHERE membership_id=$23`,
         [d.firstName,d.lastName,d.identityDocument||null,d.phone||null,d.secondaryPhone||null,d.address||null,d.postalCode||null,
           d.city||null,d.province||null,d.publicName||null,d.publicEmail||null,d.publicPhone||null,d.publicAddress||null,
           d.publicPostalCode||null,d.publicCity||null,d.publicProvince||null,d.website||null,d.bio||null,
-          d.facebookUrl||null,d.instagramUrl||null,d.youtubeUrl||null,m.id])
+          d.facebookUrl||null,d.instagramUrl||null,d.youtubeUrl||null,d.twitterUrl||null,m.id])
       if(m.member_type==='student')await tx('UPDATE student_profiles SET school_origin=$1 WHERE membership_id=$2',[d.schoolOrigin||'Sin especificar',m.id])
-      if(m.member_type==='professional')await tx('UPDATE professional_profiles SET training_school=$1,qualification_summary=$2 WHERE membership_id=$3',[d.trainingSchool||null,d.qualificationSummary||null,m.id])
+      if(m.member_type==='professional')await tx(`UPDATE professional_profiles SET training_school=$1,qualification_summary=$2,
+        teaching_level=$3,teaching_schools=$4,teaching_since_year=$5 WHERE membership_id=$6`,[d.trainingSchool||null,
+        d.qualificationSummary||null,d.teachingLevel||null,d.teachingSchools||null,d.teachingSinceYear||null,m.id])
       if(m.member_type==='school')await tx(`UPDATE school_profiles SET school_name=$1,description=$2,program_summary=$3,teachers_summary=$4,direction_experience_summary=$5 WHERE membership_id=$6`,[d.schoolName||'Escuela',d.schoolDescription||null,d.programSummary||null,d.teachersSummary||null,d.directionExperienceSummary||null,m.id])
       await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'membership.profile_updated','membership',$2)`,[user.id,m.id])
     })
