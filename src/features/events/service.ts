@@ -13,8 +13,8 @@ const SELECT = `SELECT e.*, COALESCE(sc.school_name,NULLIF(p.public_name,''),p.f
   m.member_type organizer_type FROM events e JOIN memberships m ON m.id=e.organizer_membership_id
   JOIN member_profiles p ON p.membership_id=m.id LEFT JOIN school_profiles sc ON sc.membership_id=m.id`
 
-export async function listPublicEvents(from?: string) {
-  return query<EventRow>(`${SELECT} WHERE e.status='approved' AND e.ends_at >= COALESCE($1::timestamptz,now()) ORDER BY e.featured DESC,e.starts_at ASC LIMIT 200`,[from||null])
+export async function listPublicEvents(from?: string,limit=200,offset=0) {
+  return query<EventRow>(`${SELECT} WHERE e.status='approved' AND e.ends_at >= COALESCE($1::timestamptz,now()) ORDER BY e.featured DESC,e.starts_at ASC LIMIT $2 OFFSET $3`,[from||null,limit,offset])
 }
 export async function listMemberEvents(membershipId:string) {
   return query<EventRow>(`${SELECT} WHERE e.organizer_membership_id=$1 ORDER BY e.starts_at DESC`,[membershipId])

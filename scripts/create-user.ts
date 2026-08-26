@@ -1,14 +1,15 @@
-// Crea un usuario (único camino de alta — no hay registro público).
-// Uso: npm run user:create -- <email> <password> [full_name] [role]
+// La contraseña se lee de ADMIN_PASSWORD para no exponerla en el historial ni en la lista de procesos.
+// Uso: ADMIN_PASSWORD=... npm run user:create -- <email> [full_name] [role]
 import { Client } from 'pg'
 import bcrypt from 'bcryptjs'
 import { loadEnvLocal } from './load-env'
 
 async function main(): Promise<void> {
   loadEnvLocal()
-  const [email, password, fullName, role] = process.argv.slice(2)
+  const [email, fullName, role] = process.argv.slice(2)
+  const password = process.env.ADMIN_PASSWORD
   if (!email || !password) {
-    console.error('Uso: npm run user:create -- <email> <password> [full_name] [role]')
+    console.error('Uso: define ADMIN_PASSWORD y ejecuta npm run user:create -- <email> [full_name] [role]')
     process.exit(1)
   }
   if (password.length < 8) {

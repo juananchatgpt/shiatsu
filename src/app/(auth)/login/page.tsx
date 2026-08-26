@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import Link from 'next/link'
 import { login } from '@/actions/auth'
 
 export default function LoginPage() {
@@ -47,7 +48,7 @@ export default function LoginPage() {
           {pending ? 'Entrando...' : 'Entrar'}
         </button>
 
-        <div className="flex justify-between text-sm"><a className="text-emerald-900" href="/registro">Solicitar alta</a><a className="text-stone-500" href="/recuperar-contrasena">Olvidé mi contraseña</a></div>
+        <div className="flex justify-between text-sm"><Link className="text-emerald-900" href="/registro">Solicitar alta</Link><Link className="text-stone-500" href="/recuperar-contrasena">Olvidé mi contraseña</Link></div>
       </form>
     </div>
   )

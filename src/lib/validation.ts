@@ -14,8 +14,14 @@ export const registrationSchema = z.object({
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').max(128),
   privacyAccepted: z.literal('on', { errorMap: () => ({ message: 'Debes aceptar la política de privacidad' }) }),
   schoolOrigin: optionalText,
+  trainingSchool: optionalText,
+  qualificationSummary: z.string().trim().max(2500).optional().or(z.literal('')),
   responsibleMemberNumber: optionalText,
   schoolName: optionalText,
+  schoolDescription: z.string().trim().max(2500).optional().or(z.literal('')),
+  programSummary: z.string().trim().max(5000).optional().or(z.literal('')),
+  teachersSummary: z.string().trim().max(5000).optional().or(z.literal('')),
+  directionExperienceSummary: z.string().trim().max(5000).optional().or(z.literal('')),
   insuranceSelected: z.boolean().default(false),
   directoryOptIn: z.boolean().default(false),
   publicName: optionalText,
@@ -27,14 +33,22 @@ export const registrationSchema = z.object({
   bio: z.string().trim().max(2500).optional().or(z.literal('')),
 }).superRefine((data, ctx) => {
   if (data.memberType === 'student' && !data.schoolOrigin) ctx.addIssue({ code: 'custom', path: ['schoolOrigin'], message: 'Indica la escuela de procedencia' })
+  if (data.memberType === 'professional') {
+    if (!data.trainingSchool) ctx.addIssue({ code: 'custom', path: ['trainingSchool'], message: 'Indica la escuela de formación' })
+    if (!data.qualificationSummary) ctx.addIssue({ code: 'custom', path: ['qualificationSummary'], message: 'Resume tu titulación o formación' })
+  }
   if (data.memberType === 'school') {
     if (!data.schoolName) ctx.addIssue({ code: 'custom', path: ['schoolName'], message: 'Indica el nombre de la escuela' })
     if (!data.responsibleMemberNumber) ctx.addIssue({ code: 'custom', path: ['responsibleMemberNumber'], message: 'Indica el número del profesional responsable' })
+    if (!data.programSummary) ctx.addIssue({ code: 'custom', path: ['programSummary'], message: 'Resume el programa formativo' })
+    if (!data.teachersSummary) ctx.addIssue({ code: 'custom', path: ['teachersSummary'], message: 'Indica el equipo docente' })
+    if (!data.directionExperienceSummary) ctx.addIssue({ code: 'custom', path: ['directionExperienceSummary'], message: 'Indica la experiencia de la dirección' })
   }
 })
 
 export const profileSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254), firstName: z.string().trim().min(2).max(100),
+  currentPassword: z.string().max(128).optional().or(z.literal('')),
   lastName: z.string().trim().max(150), identityDocument: z.string().trim().max(30).optional().or(z.literal('')),
   phone: optionalText, secondaryPhone: optionalText, address: optionalText, postalCode: optionalText,
   city: optionalText, province: optionalText, directoryOptIn: z.boolean(), publicName: optionalText,
@@ -42,6 +56,12 @@ export const profileSchema = z.object({
   publicAddress: optionalText, publicPostalCode: optionalText, publicCity: optionalText,
   publicProvince: optionalText, website: optionalUrl, bio: z.string().trim().max(2500).optional().or(z.literal('')),
   facebookUrl: optionalUrl, instagramUrl: optionalUrl, youtubeUrl: optionalUrl,
+  insuranceSelected: z.boolean(), schoolOrigin: optionalText, trainingSchool: optionalText,
+  qualificationSummary: z.string().trim().max(2500).optional().or(z.literal('')),
+  schoolName: optionalText, schoolDescription: z.string().trim().max(2500).optional().or(z.literal('')),
+  programSummary: z.string().trim().max(5000).optional().or(z.literal('')),
+  teachersSummary: z.string().trim().max(5000).optional().or(z.literal('')),
+  directionExperienceSummary: z.string().trim().max(5000).optional().or(z.literal('')),
 })
 
 export const eventSchema = z.object({

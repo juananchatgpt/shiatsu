@@ -8,8 +8,8 @@
 ## Secuencia
 
 1. Crear PostgreSQL exclusivo y configurar copias.
-2. Aplicar `npm run db:apply` desde un entorno con acceso a la base.
-3. Crear primer administrador con `npm run user:create`.
+2. Aplicar `npm run db:migrate` desde un entorno con acceso a la base. Las migraciones aplicadas son inmutables; cualquier cambio posterior debe ir en un fichero SQL numerado nuevo.
+3. Crear el primer administrador definiendo temporalmente `ADMIN_PASSWORD` y ejecutando `npm run user:create -- correo@dominio.es "Nombre" admin`. Eliminar después la variable de la sesión.
 4. Configurar servicio desde GitHub usando `Dockerfile`, puerto 3000.
 5. Comprobar `/api/health`, login, permisos y recuperación de contraseña.
 6. Probar widgets en WordPress y solo entonces sustituir los plugins/directorios de prueba.

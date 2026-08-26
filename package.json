@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "db:apply": "tsx scripts/apply-schema.ts",
     "db:test": "tsx scripts/test-db.ts",

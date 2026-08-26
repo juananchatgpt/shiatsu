@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { query } from '@/lib/db'
+import { query, withTransaction } from '@/lib/db'
 import {
   createSession,
   destroySession,
@@ -64,13 +64,20 @@ export async function logout() {
 export async function changePassword(_prev: unknown, formData: FormData) {
   const user = await getSessionUser()
   if (!user) return { error: 'No autenticado' }
-  const newPassword = String(formData.get('password') ?? '')
-  if (newPassword.length < 6) {
-    return { error: 'La contraseña debe tener al menos 6 caracteres' }
+  const currentPassword = String(formData.get('currentPassword') ?? '')
+  const newPassword = String(formData.get('newPassword') ?? '')
+  const confirmation = String(formData.get('passwordConfirmation') ?? '')
+  if (newPassword.length < 8) {
+    return { error: 'La contraseña debe tener al menos 8 caracteres' }
   }
-  await query('UPDATE users SET password_hash = $1 WHERE id = $2', [
-    await hashPassword(newPassword),
-    user.id,
-  ])
-  return { ok: true }
+  if(newPassword!==confirmation)return{error:'Las contraseñas nuevas no coinciden'}
+  const rows=await query<{password_hash:string}>('SELECT password_hash FROM users WHERE id=$1 LIMIT 1',[user.id])
+  if(!rows[0]||!await verifyPassword(currentPassword,rows[0].password_hash))return{error:'La contraseña actual no es correcta'}
+  await withTransaction(async tx=>{
+    await tx('UPDATE users SET password_hash=$1,password_reset_required=false,updated_at=now() WHERE id=$2',[await hashPassword(newPassword),user.id])
+    await tx('DELETE FROM sessions WHERE user_id=$1',[user.id])
+    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'user.password_changed','user',$1)`,[user.id])
+  })
+  const store=await cookies();store.delete(SESSION_COOKIE)
+  redirect('/login?password=changed')
 }

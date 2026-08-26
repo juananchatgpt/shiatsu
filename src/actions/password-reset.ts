@@ -25,8 +25,14 @@ export async function requestPasswordReset(_prev:ActionState|null,form:FormData)
 export async function resetPassword(_prev:ActionState|null,form:FormData):Promise<ActionState>{
   const token=String(form.get('token')??'');const password=String(form.get('password')??'')
   if(token.length<32)return{error:'Enlace no válido'};if(password.length<8)return{error:'La contraseña debe tener al menos 8 caracteres'}
-  const rows=await query<{user_id:string}>(`SELECT user_id FROM password_reset_tokens WHERE token_hash=$1 AND used_at IS NULL AND expires_at>now() LIMIT 1`,[hashToken(token)])
-  if(!rows[0])return{error:'El enlace ha caducado o ya se utilizó'}
-  await withTransaction(async tx=>{await tx('UPDATE users SET password_hash=$1,password_reset_required=false,updated_at=now() WHERE id=$2',[await hashPassword(password),rows[0].user_id]);await tx('UPDATE password_reset_tokens SET used_at=now() WHERE token_hash=$1',[hashToken(token)]);await tx('DELETE FROM sessions WHERE user_id=$1',[rows[0].user_id])})
-  return{ok:true}
+  try{
+    await withTransaction(async tx=>{
+      const rows=await tx<{user_id:string}>(`UPDATE password_reset_tokens SET used_at=now() WHERE token_hash=$1 AND used_at IS NULL AND expires_at>now() RETURNING user_id`,[hashToken(token)])
+      if(!rows[0])throw new Error('INVALID_TOKEN')
+      await tx('UPDATE users SET password_hash=$1,password_reset_required=false,updated_at=now() WHERE id=$2',[await hashPassword(password),rows[0].user_id])
+      await tx('DELETE FROM sessions WHERE user_id=$1',[rows[0].user_id])
+      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'user.password_reset','user',$1)`,[rows[0].user_id])
+    })
+    return{ok:true}
+  }catch(error){if(error instanceof Error&&error.message==='INVALID_TOKEN')return{error:'El enlace ha caducado o ya se utilizó'};throw error}
 }

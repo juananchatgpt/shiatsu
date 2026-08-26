@@ -375,11 +375,11 @@ ejecución definitiva autorizada expresamente.
 ### Phase 9: Seguridad, QA y preparación de despliegue
 **Objective**: verificar el sistema completo y dejar preparado GitHub→VPS/Easypanel.
 **Validation**:
-- [ ] `npm run typecheck` pasa.
-- [ ] Pruebas automatizadas críticas pasan.
-- [ ] `npm run build` finaliza correctamente.
-- [ ] QA en navegador de escritorio y móvil.
-- [ ] Permisos y APIs públicas revisados.
+- [x] `npm run typecheck` pasa.
+- [x] Pruebas automatizadas críticas pasan.
+- [x] `npm run build` finaliza correctamente.
+- [x] QA en navegador de escritorio y móvil.
+- [x] Permisos y APIs públicas revisados.
 - [ ] Copia de seguridad y restauración documentadas/probadas.
 - [ ] Success Criteria satisfechos.
 - [ ] Deploy ejecutado únicamente con autorización expresa.
@@ -399,6 +399,16 @@ ejecución definitiva autorizada expresamente.
 - **Error**: el importador falló por usar `await` en el nivel superior.
 - **Fix**: envolver los scripts en `async function main()` y capturar el error al final.
 - **Apply to**: scripts CLI de migración, importación y mantenimiento.
+
+### 2026-08-26: una migración aplicada debe ser inmutable
+- **Error evitado**: reaplicar un `schema.sql` con `CREATE IF NOT EXISTS` no evoluciona columnas y puede registrar un checksum engañoso.
+- **Fix**: migraciones SQL numeradas; si cambia el checksum de una aplicada, el proceso falla y exige crear otra.
+- **Apply to**: todos los cambios de esquema después de `001_initial.sql`.
+
+### 2026-08-26: la proyección pública no puede devolver filas internas
+- **Riesgo**: `SELECT e.*` contenía estado, moderación e identificadores internos.
+- **Fix**: mapper explícito probado que solo devuelve el contrato público.
+- **Apply to**: cualquier API o widget público nuevo.
 
 ---
 

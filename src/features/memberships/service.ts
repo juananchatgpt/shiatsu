@@ -12,6 +12,8 @@ export interface MembershipDetail {
   public_city: string | null; public_province: string | null; website: string | null; bio: string | null
   facebook_url: string | null; instagram_url: string | null; youtube_url: string | null
   school_origin: string | null; training_school: string | null; school_name: string | null
+  qualification_summary:string|null; school_description:string|null; program_summary:string|null
+  teachers_summary:string|null; direction_experience_summary:string|null
   created_at: string; updated_at: string
 }
 
@@ -22,7 +24,8 @@ const DETAIL_SELECT = `
     p.phone, p.secondary_phone, p.address, p.postal_code, p.city, p.province,
     p.public_name, p.public_email, p.public_phone, p.public_address, p.public_postal_code,
     p.public_city, p.public_province, p.website, p.bio, p.facebook_url, p.instagram_url, p.youtube_url,
-    st.school_origin, pr.training_school, sc.school_name, m.created_at, m.updated_at
+    st.school_origin, pr.training_school, pr.qualification_summary, sc.school_name, sc.description AS school_description,
+    sc.program_summary,sc.teachers_summary,sc.direction_experience_summary,m.created_at, m.updated_at
   FROM memberships m JOIN users u ON u.id = m.user_id
   JOIN member_profiles p ON p.membership_id = m.id
   LEFT JOIN student_profiles st ON st.membership_id = m.id
@@ -70,7 +73,7 @@ export interface PublicDirectoryRow {
   training_school: string | null
 }
 
-export async function listPublicDirectory(filters: { type?: string; province?: string; search?: string } = {}) {
+export async function listPublicDirectory(filters: { type?: string; province?: string; search?: string; limit?:number; offset?:number } = {}) {
   const conditions = ["m.status = 'active'", 'm.directory_opt_in = true', "m.member_type IN ('professional','school')"]
   const params: unknown[] = []
   if (filters.type && ['professional', 'school'].includes(filters.type)) {
@@ -89,7 +92,7 @@ export async function listPublicDirectory(filters: { type?: string; province?: s
      FROM memberships m JOIN member_profiles p ON p.membership_id=m.id
      LEFT JOIN professional_profiles pr ON pr.membership_id=m.id
      LEFT JOIN school_profiles sc ON sc.membership_id=m.id
-     WHERE ${conditions.join(' AND ')} ORDER BY name ASC LIMIT 250`, params,
+     WHERE ${conditions.join(' AND ')} ORDER BY name ASC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params,filters.limit??250,filters.offset??0],
   )
 }
 

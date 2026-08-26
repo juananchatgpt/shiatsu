@@ -1,7 +1,7 @@
 'use server'
 
-import { hashPassword } from '@/lib/auth'
-import { query, withTransaction } from '@/lib/db'
+import { hashPassword, verifyPassword } from '@/lib/auth'
+import { withTransaction } from '@/lib/db'
 import { FEES_CENTS, INSURANCE_FEE_CENTS, type MemberType } from '@/lib/domain'
 import { registrationSchema, profileSchema } from '@/lib/validation'
 import { requireUser } from '@/lib/access'
@@ -19,7 +19,10 @@ export async function registerMember(_prev: ActionState | null, form: FormData):
     identityDocument: text(form, 'identityDocument'), phone: text(form, 'phone'), email: text(form, 'email'),
     password: text(form, 'password'), privacyAccepted: text(form, 'privacyAccepted'),
     schoolOrigin: text(form, 'schoolOrigin'), responsibleMemberNumber: text(form, 'responsibleMemberNumber'),
-    schoolName: text(form, 'schoolName'), insuranceSelected: checked(form, 'insuranceSelected'),
+    trainingSchool:text(form,'trainingSchool'), qualificationSummary:text(form,'qualificationSummary'),
+    schoolName: text(form, 'schoolName'), schoolDescription:text(form,'schoolDescription'),
+    programSummary:text(form,'programSummary'),teachersSummary:text(form,'teachersSummary'),
+    directionExperienceSummary:text(form,'directionExperienceSummary'),insuranceSelected: checked(form, 'insuranceSelected'),
     directoryOptIn: checked(form, 'directoryOptIn'), publicName: text(form, 'publicName'),
     publicEmail: text(form, 'publicEmail'), publicPhone: text(form, 'publicPhone'),
     publicProvince: text(form, 'publicProvince'), publicCity: text(form, 'publicCity'),
@@ -60,10 +63,11 @@ export async function registerMember(_prev: ActionState | null, form: FormData):
           data.website || null, data.bio || null],
       )
       if (data.memberType === 'student') await tx('INSERT INTO student_profiles (membership_id,school_origin) VALUES ($1,$2)', [membershipId, data.schoolOrigin])
-      if (data.memberType === 'professional') await tx('INSERT INTO professional_profiles (membership_id) VALUES ($1)', [membershipId])
+      if (data.memberType === 'professional') await tx('INSERT INTO professional_profiles (membership_id,training_school,qualification_summary) VALUES ($1,$2,$3)', [membershipId,data.trainingSchool,data.qualificationSummary])
       if (data.memberType === 'school') await tx(
-        'INSERT INTO school_profiles (membership_id,responsible_professional_membership_id,school_name) VALUES ($1,$2,$3)',
-        [membershipId, responsibleId, data.schoolName],
+        `INSERT INTO school_profiles (membership_id,responsible_professional_membership_id,school_name,description,program_summary,teachers_summary,direction_experience_summary)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [membershipId,responsibleId,data.schoolName,data.schoolDescription||null,data.programSummary,data.teachersSummary,data.directionExperienceSummary],
       )
       await tx(`INSERT INTO audit_log (action,entity_type,entity_id,details) VALUES ('membership.registered','membership',$1,$2::jsonb)`,
         [membershipId, JSON.stringify({ memberType: data.memberType })])
@@ -80,23 +84,28 @@ export async function registerMember(_prev: ActionState | null, form: FormData):
 export async function updateProfile(_prev: ActionState | null, form: FormData): Promise<ActionState> {
   const user = await requireUser()
   const parsed = profileSchema.safeParse({
-    email:text(form,'email'), firstName:text(form,'firstName'), lastName:text(form,'lastName'),
+    email:text(form,'email'), currentPassword:text(form,'currentPassword'),firstName:text(form,'firstName'), lastName:text(form,'lastName'),
     identityDocument:text(form,'identityDocument'), phone:text(form,'phone'), secondaryPhone:text(form,'secondaryPhone'),
     address:text(form,'address'), postalCode:text(form,'postalCode'), city:text(form,'city'), province:text(form,'province'),
     directoryOptIn:checked(form,'directoryOptIn'), publicName:text(form,'publicName'), publicEmail:text(form,'publicEmail'),
     publicPhone:text(form,'publicPhone'), publicAddress:text(form,'publicAddress'), publicPostalCode:text(form,'publicPostalCode'),
     publicCity:text(form,'publicCity'), publicProvince:text(form,'publicProvince'), website:text(form,'website'), bio:text(form,'bio'),
     facebookUrl:text(form,'facebookUrl'), instagramUrl:text(form,'instagramUrl'), youtubeUrl:text(form,'youtubeUrl'),
+    insuranceSelected:checked(form,'insuranceSelected'),schoolOrigin:text(form,'schoolOrigin'),trainingSchool:text(form,'trainingSchool'),
+    qualificationSummary:text(form,'qualificationSummary'),schoolName:text(form,'schoolName'),schoolDescription:text(form,'schoolDescription'),
+    programSummary:text(form,'programSummary'),teachersSummary:text(form,'teachersSummary'),directionExperienceSummary:text(form,'directionExperienceSummary'),
   })
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
   const d = parsed.data
   try {
     await withTransaction(async (tx) => {
-      const memberships = await tx<{ id:string; member_type:MemberType }>('SELECT id,member_type FROM memberships WHERE user_id=$1 LIMIT 1',[user.id])
+      const memberships = await tx<{ id:string; member_type:MemberType; email:string; password_hash:string }>(`SELECT m.id,m.member_type,u.email,u.password_hash FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.user_id=$1 LIMIT 1`,[user.id])
       if (!memberships[0]) throw new Error('NO_MEMBERSHIP')
       const m=memberships[0]
+      if(d.email!==m.email&&(!d.currentPassword||!await verifyPassword(d.currentPassword,m.password_hash)))throw new Error('REAUTH_REQUIRED')
       await tx('UPDATE users SET email=$1,full_name=$2,updated_at=now() WHERE id=$3',[d.email,`${d.firstName} ${d.lastName}`.trim(),user.id])
-      await tx(`UPDATE memberships SET directory_opt_in=$1,updated_at=now() WHERE id=$2`,[m.member_type !== 'student' && d.directoryOptIn,m.id])
+      const insured=m.member_type!=='student'&&d.insuranceSelected
+      await tx(`UPDATE memberships SET directory_opt_in=$1,insurance_selected=$2,insurance_fee_cents=$3,updated_at=now() WHERE id=$4`,[m.member_type !== 'student' && d.directoryOptIn,insured,insured?INSURANCE_FEE_CENTS:0,m.id])
       await tx(`UPDATE member_profiles SET first_name=$1,last_name=$2,identity_document=$3,phone=$4,secondary_phone=$5,address=$6,
         postal_code=$7,city=$8,province=$9,public_name=$10,public_email=$11,public_phone=$12,public_address=$13,
         public_postal_code=$14,public_city=$15,public_province=$16,website=$17,bio=$18,facebook_url=$19,
@@ -105,10 +114,14 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
           d.city||null,d.province||null,d.publicName||null,d.publicEmail||null,d.publicPhone||null,d.publicAddress||null,
           d.publicPostalCode||null,d.publicCity||null,d.publicProvince||null,d.website||null,d.bio||null,
           d.facebookUrl||null,d.instagramUrl||null,d.youtubeUrl||null,m.id])
+      if(m.member_type==='student')await tx('UPDATE student_profiles SET school_origin=$1 WHERE membership_id=$2',[d.schoolOrigin||'Sin especificar',m.id])
+      if(m.member_type==='professional')await tx('UPDATE professional_profiles SET training_school=$1,qualification_summary=$2 WHERE membership_id=$3',[d.trainingSchool||null,d.qualificationSummary||null,m.id])
+      if(m.member_type==='school')await tx(`UPDATE school_profiles SET school_name=$1,description=$2,program_summary=$3,teachers_summary=$4,direction_experience_summary=$5 WHERE membership_id=$6`,[d.schoolName||'Escuela',d.schoolDescription||null,d.programSummary||null,d.teachersSummary||null,d.directionExperienceSummary||null,m.id])
       await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'membership.profile_updated','membership',$2)`,[user.id,m.id])
     })
     return { ok:true }
   } catch(error) {
+    if(error instanceof Error&&error.message==='REAUTH_REQUIRED')return{error:'Escribe tu contraseña actual para cambiar el email de acceso'}
     if (typeof error === 'object' && error && 'code' in error && error.code === '23505') return { error:'Ese email ya está en uso' }
     console.error('updateProfile',error); return { error:'No se pudieron guardar los cambios' }
   }

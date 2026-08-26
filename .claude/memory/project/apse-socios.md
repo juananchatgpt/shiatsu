@@ -8,7 +8,10 @@
   comunicaciones, recuperación de contraseña e importador WordPress.
 - Export inspeccionado: 401 filas; 400 con email; 180 activas, 221 inactivas; 136 alumnos,
   253 profesionales y 12 escuelas. Simulación únicamente.
-- Build, typecheck y cinco pruebas de reglas críticos pasan. `npm audit`: cero vulnerabilidades.
+- Build, typecheck y seis pruebas críticas pasan. `npm audit`: cero vulnerabilidades.
+- Revisión independiente cerrada: API pública con proyección explícita, migraciones inmutables,
+  tokens de recuperación atómicos, auditoría transaccional y reautenticación al cambiar email.
+- El export tiene un número de socio duplicado; el importador lo informa y genera reconciliación.
 
 ## Pendiente del cliente/infraestructura
 
