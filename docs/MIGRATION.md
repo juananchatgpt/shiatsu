@@ -25,3 +25,13 @@ requieren restablecimiento de contraseña.
   recuperaciones ni notificaciones.
 - Reconciliación: cero usuarios miembro huérfanos y cero claves sensibles de WordPress en
   `legacy_data`.
+
+## Imágenes de perfiles
+
+- Migradas a PostgreSQL el 26-08-2026 mediante `npm run wp:import-photos`, sin enviar correos.
+- 181 imágenes recuperadas (7,6 MB): 149 profesionales, 8 escuelas y 24 alumnos.
+- Tres referencias del directorio antiguo estaban rotas y quedan sin imagen.
+- Visibilidad inicial: 88 profesionales y 5 escuelas. Las 24 imágenes de alumnos son privadas.
+- Instantánea previa: esquema PostgreSQL `backup_pre_photo_import_20260826`.
+- Profesionales y escuelas pueden sustituir o eliminar la imagen desde su perfil. Los alumnos pueden
+  eliminar la imagen histórica, pero no subir una nueva ni aparecer en el directorio.

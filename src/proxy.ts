@@ -12,7 +12,7 @@ export function proxy(request: NextRequest) {
 
   const publicPaths = [
     '/', '/login', '/registro', '/solicitud-recibida', '/directorio', '/eventos',
-    '/api/auth', '/api/public', '/api/widgets.js', '/api/health', '/embed', '/recuperar-contrasena', '/restablecer-contrasena',
+    '/api/auth', '/api/public', '/api/profile-photos', '/api/widgets.js', '/api/health', '/embed', '/recuperar-contrasena', '/restablecer-contrasena',
   ]
   if (publicPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))) {
     return NextResponse.next()

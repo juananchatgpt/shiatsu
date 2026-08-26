@@ -13,6 +13,9 @@
   tokens de recuperación atómicos, auditoría transaccional y reautenticación al cambiar email.
 - Reconciliación: 120 perfiles visibles, 384 números conservados, 16 pendientes, 11 escuelas
   vinculadas y una sin profesional responsable; cero miembros huérfanos y cero claves sensibles.
+- Imágenes migradas a PostgreSQL: 181 (149 profesionales, 8 escuelas, 24 alumnos; 7,6 MB), sin
+  correos. Tres referencias estaban rotas. Directorio: 88 fotos profesionales y 5 de escuelas;
+  alumnos siempre privados. Snapshot: `backup_pre_photo_import_20260826`.
 - PostgreSQL `shiatsu` conectado y migraciones `001`/`002` aplicadas el 2026-08-26.
 - Primer administrador: Juanan Sanchez (`jnansanler@gmail.com`), activación enviada por SMTP.
 - GitHub remoto configurado y rama `main` publicada en `juananchatgpt/shiatsu`.
@@ -33,6 +36,8 @@
 - La cuota de escuela de 95 € queda confirmada para esta fase.
 - Los documentos privados se almacenan dentro de PostgreSQL como `BYTEA`, con acceso exclusivo del
   propietario/administrador, límite de 5 MB y descarga `no-store`; entran en el backup de PostgreSQL.
+- Las fotos usan `membership_profile_photos`; solo profesionales/escuelas pueden subir nuevas y la
+  ruta pública exige socio activo, consentimiento de directorio y tipo profesional/escuela.
 - Fase 1 no gestiona pagos ni campañas masivas.
 - Importados no conservan hashes de acceso; requieren recuperación de contraseña.
 - Por instrucción expresa, la migración no envía ningún correo; cada socio recuperará su contraseña

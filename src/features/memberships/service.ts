@@ -12,6 +12,7 @@ export interface MembershipDetail {
   public_city: string | null; public_province: string | null; website: string | null; bio: string | null
   facebook_url: string | null; instagram_url: string | null; youtube_url: string | null
   school_origin: string | null; training_school: string | null; school_name: string | null
+  has_photo:boolean
   qualification_summary:string|null; school_description:string|null; program_summary:string|null
   teachers_summary:string|null; direction_experience_summary:string|null
   created_at: string; updated_at: string
@@ -25,7 +26,8 @@ const DETAIL_SELECT = `
     p.public_name, p.public_email, p.public_phone, p.public_address, p.public_postal_code,
     p.public_city, p.public_province, p.website, p.bio, p.facebook_url, p.instagram_url, p.youtube_url,
     st.school_origin, pr.training_school, pr.qualification_summary, sc.school_name, sc.description AS school_description,
-    sc.program_summary,sc.teachers_summary,sc.direction_experience_summary,m.created_at, m.updated_at
+    sc.program_summary,sc.teachers_summary,sc.direction_experience_summary,
+    EXISTS(SELECT 1 FROM membership_profile_photos ph WHERE ph.membership_id=m.id) has_photo,m.created_at, m.updated_at
   FROM memberships m JOIN users u ON u.id = m.user_id
   JOIN member_profiles p ON p.membership_id = m.id
   LEFT JOIN student_profiles st ON st.membership_id = m.id
@@ -69,7 +71,7 @@ export async function listAdminMembers(filters: { type?: string; status?: string
 export interface PublicDirectoryRow {
   id: string; member_type: 'professional' | 'school'; name: string; public_email: string | null
   public_phone: string | null; public_city: string | null; public_province: string | null
-  website: string | null; bio: string | null; photo_url: string | null; school_name: string | null
+  website: string | null; bio: string | null; has_photo:boolean; photo_version:string|null; school_name: string | null
   training_school: string | null
 }
 
@@ -87,11 +89,13 @@ export async function listPublicDirectory(filters: { type?: string; province?: s
   return query<PublicDirectoryRow>(
     `SELECT m.id, m.member_type,
       COALESCE(sc.school_name, NULLIF(p.public_name,''), p.first_name || ' ' || p.last_name) AS name,
-      p.public_email, p.public_phone, p.public_city, p.public_province, p.website, p.bio, p.photo_url,
+      p.public_email, p.public_phone, p.public_city, p.public_province, p.website, p.bio,
+      (ph.membership_id IS NOT NULL) has_photo,EXTRACT(EPOCH FROM ph.updated_at)::bigint::text photo_version,
       sc.school_name, pr.training_school
      FROM memberships m JOIN member_profiles p ON p.membership_id=m.id
      LEFT JOIN professional_profiles pr ON pr.membership_id=m.id
      LEFT JOIN school_profiles sc ON sc.membership_id=m.id
+     LEFT JOIN membership_profile_photos ph ON ph.membership_id=m.id
      WHERE ${conditions.join(' AND ')} ORDER BY name ASC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params,filters.limit??250,filters.offset??0],
   )
 }

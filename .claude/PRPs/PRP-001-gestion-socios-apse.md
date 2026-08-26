@@ -415,6 +415,11 @@ ejecución definitiva autorizada expresamente.
 - **Seguridad**: no se conservaron hashes, tokens, nonces ni IBAN y no se invocó SMTP.
 - **Incidencias**: 16 números pendientes y una escuela sin profesional requieren revisión manual.
 
+### 2026-08-26: fotos históricas desacopladas de WordPress
+- **Resultado**: 181 imágenes válidas migradas a PostgreSQL; tres fuentes estaban rotas.
+- **Privacidad**: alumnos nunca públicos; profesional/escuela solo con estado activo y opt-in.
+- **Seguridad**: límite de 5 MB, MIME permitido y validación de firma binaria antes de almacenar.
+
 ### 2026-08-26: documentos pequeños dentro de PostgreSQL
 - **Decisión**: APSE prevé pocos PDF/imágenes; se almacenan como `BYTEA` con límite de 5 MB.
 - **Seguridad**: descarga autenticada, autorización por propietario/administrador y respuesta `no-store`.
