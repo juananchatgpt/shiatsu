@@ -14,7 +14,10 @@
 - El export tiene un número de socio duplicado; el importador lo informa y genera reconciliación.
 - PostgreSQL `shiatsu` conectado y migraciones `001`/`002` aplicadas el 2026-08-26.
 - Primer administrador: Juanan Sanchez (`jnansanler@gmail.com`), activación enviada por SMTP.
-- GitHub remoto configurado desde la variable local `GITHUB`.
+- GitHub remoto configurado y rama `main` publicada en `juananchatgpt/shiatsu`.
+- SMTP validado tras corregir `SMTP_SECURE=true` para el puerto 465; invitación entregada al servidor.
+- El dominio configurado resuelve DNS, pero `/api/health` aún no acepta conexiones: falta o está
+  pendiente el servicio de Easypanel.
 
 ## Pendiente del cliente/infraestructura
 
