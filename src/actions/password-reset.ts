@@ -31,7 +31,7 @@ export async function resetPassword(_prev:ActionState|null,form:FormData):Promis
       if(!rows[0])throw new Error('INVALID_TOKEN')
       await tx('UPDATE users SET password_hash=$1,password_reset_required=false,updated_at=now() WHERE id=$2',[await hashPassword(password),rows[0].user_id])
       await tx('DELETE FROM sessions WHERE user_id=$1',[rows[0].user_id])
-      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'user.password_reset','user',$1)`,[rows[0].user_id])
+      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'user.password_reset','user',$2)`,[rows[0].user_id,rows[0].user_id])
     })
     return{ok:true}
   }catch(error){if(error instanceof Error&&error.message==='INVALID_TOKEN')return{error:'El enlace ha caducado o ya se utilizó'};throw error}

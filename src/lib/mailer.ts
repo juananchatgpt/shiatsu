@@ -28,8 +28,10 @@ export interface SendEmailOptions {
 }
 
 export async function sendEmail(options: SendEmailOptions): Promise<void> {
+  const fromEmail=process.env.SMTP_FROM_EMAIL||process.env.SMTP_FROM
+  const from=process.env.SMTP_FROM_NAME&&fromEmail?{name:process.env.SMTP_FROM_NAME,address:fromEmail}:fromEmail
   await getTransporter().sendMail({
-    from: process.env.SMTP_FROM,
+    from,
     replyTo: options.replyTo ?? (process.env.SMTP_REPLY_TO || undefined),
     ...options,
   })

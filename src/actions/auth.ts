@@ -76,7 +76,7 @@ export async function changePassword(_prev: unknown, formData: FormData) {
   await withTransaction(async tx=>{
     await tx('UPDATE users SET password_hash=$1,password_reset_required=false,updated_at=now() WHERE id=$2',[await hashPassword(newPassword),user.id])
     await tx('DELETE FROM sessions WHERE user_id=$1',[user.id])
-    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'user.password_changed','user',$1)`,[user.id])
+    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'user.password_changed','user',$2)`,[user.id,user.id])
   })
   const store=await cookies();store.delete(SESSION_COOKIE)
   redirect('/login?password=changed')

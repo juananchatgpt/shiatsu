@@ -19,9 +19,7 @@ Copy-Item .env.local.example .env.local
 # Rellenar DATABASE_URL y, cuando proceda, SMTP_*
 npm install
 npm run db:migrate
-$env:ADMIN_PASSWORD='contraseña-temporal-segura'
-npm run user:create -- admin@dominio.es "Nombre" admin
-Remove-Item Env:ADMIN_PASSWORD
+npm run admin:invite -- admin@dominio.es "Nombre"
 npm run dev
 ```
 

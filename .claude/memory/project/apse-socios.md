@@ -12,14 +12,15 @@
 - Revisión independiente cerrada: API pública con proyección explícita, migraciones inmutables,
   tokens de recuperación atómicos, auditoría transaccional y reautenticación al cambiar email.
 - El export tiene un número de socio duplicado; el importador lo informa y genera reconciliación.
+- PostgreSQL `shiatsu` conectado y migraciones `001`/`002` aplicadas el 2026-08-26.
+- Primer administrador: Juanan Sanchez (`jnansanler@gmail.com`), activación enviada por SMTP.
+- GitHub remoto configurado desde la variable local `GITHUB`.
 
 ## Pendiente del cliente/infraestructura
 
-- `DATABASE_URL` de un Postgres exclusivo.
-- Credenciales SMTP y remitente.
-- Email/nombre/contraseña para crear el primer administrador (por CLI, nunca en memoria).
-- Dominio final de la app y acceso WordPress para insertar widgets.
-- Decisión de almacenamiento de documentos privados.
+- Acceso WordPress para insertar widgets cuando corresponda.
+- Los documentos privados se almacenan dentro de PostgreSQL como `BYTEA`,
+  con acceso autenticado y límite de 5 MB por archivo; deben entrar en la copia de seguridad de la BBDD.
 - Confirmar cuota definitiva de escuela antes de fase 2.
 
 ## Decisiones
