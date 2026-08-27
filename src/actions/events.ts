@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin, requireUser, getMembershipContext, canCreateEvents } from '@/lib/access'
 import { withTransaction } from '@/lib/db'
 import { EVENT_STATUSES } from '@/lib/domain'
-import { eventSchema } from '@/lib/validation'
+import { adminEventUpdateSchema, eventSchema } from '@/lib/validation'
 import type { ActionState } from './memberships'
 
 const checked=(f:FormData,n:string)=>f.get(n)==='on'
@@ -65,6 +65,48 @@ export async function updateEvent(_prev:ActionState|null,form:FormData):Promise<
   await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'event.updated_resubmitted','event',$2)`,[user.id,id]);return true})
   if(!updated)return{error:'Evento no encontrado'}
   revalidatePath('/mis-eventos');revalidatePath('/eventos');return{ok:true}
+}
+
+export async function adminUpdateEvent(_prev:ActionState|null,form:FormData):Promise<ActionState>{
+  const admin=await requireAdmin()
+  const parsed=adminEventUpdateSchema.safeParse({
+    eventId:text(form,'eventId'),organizerMembershipId:text(form,'organizerMembershipId'),status:text(form,'status'),
+    moderationNotes:text(form,'moderationNotes'),featured:checked(form,'featured'),title:text(form,'title'),
+    description:text(form,'description'),startsAt:text(form,'startsAt'),endsAt:text(form,'endsAt'),allDay:checked(form,'allDay'),
+    modality:text(form,'modality'),venueName:text(form,'venueName'),address:text(form,'address'),city:text(form,'city'),
+    province:text(form,'province'),postalCode:text(form,'postalCode'),registrationUrl:text(form,'registrationUrl'),
+    publicContact:text(form,'publicContact'),isFree:checked(form,'isFree'),
+    priceEuros:text(form,'priceEuros')?Number(text(form,'priceEuros')):undefined,imageUrl:text(form,'imageUrl'),
+  })
+  if(!parsed.success)return{error:parsed.error.issues[0]?.message??'Revisa los datos'}
+  const d=parsed.data
+  try{
+    const updated=await withTransaction(async tx=>{
+      const current=await tx<{organizer_membership_id:string}>(`SELECT organizer_membership_id FROM events WHERE id=$1 FOR UPDATE`,[d.eventId])
+      if(!current[0])return false
+      const organizers=await tx<{id:string}>(`SELECT id FROM memberships WHERE id=$1 AND member_type IN ('professional','school') AND (status='active' OR id=$2) LIMIT 1`,[d.organizerMembershipId,current[0].organizer_membership_id])
+      if(!organizers[0])throw new Error('ORGANIZER_NOT_FOUND')
+      await tx(`UPDATE events SET organizer_membership_id=$1,title=$2,description=$3,image_url=$4,
+        starts_at=$5::timestamp AT TIME ZONE 'Europe/Madrid',ends_at=$6::timestamp AT TIME ZONE 'Europe/Madrid',all_day=$7,
+        modality=$8,venue_name=$9,address=$10,city=$11,province=$12,postal_code=$13,registration_url=$14,
+        public_contact=$15,is_free=$16,price_cents=$17,status=$18,moderation_notes=$19,featured=$20,
+        submitted_at=CASE WHEN $18 IN ('pending_review','approved') THEN COALESCE(submitted_at,now()) ELSE submitted_at END,
+        reviewed_by=CASE WHEN $18 IN ('approved','rejected','cancelled') THEN $21 ELSE NULL END,
+        reviewed_at=CASE WHEN $18 IN ('approved','rejected','cancelled') THEN now() ELSE NULL END,updated_at=now()
+        WHERE id=$22`,[d.organizerMembershipId,d.title,d.description,d.imageUrl||null,d.startsAt,d.endsAt,d.allDay,d.modality,
+        d.venueName||null,d.address||null,d.city||null,d.province||null,d.postalCode||null,d.registrationUrl||null,
+        d.publicContact||null,d.isFree,d.isFree?null:Math.round((d.priceEuros??0)*100),d.status,d.moderationNotes||null,
+        d.featured,admin.id,d.eventId])
+      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'event.updated_by_admin','event',$2,$3::jsonb)`,[admin.id,d.eventId,JSON.stringify({status:d.status,organizerId:d.organizerMembershipId})])
+      return true
+    })
+    if(!updated)return{error:'Evento no encontrado'}
+    revalidatePath('/admin/eventos');revalidatePath(`/admin/eventos/${d.eventId}`);revalidatePath('/eventos');revalidatePath('/embed/eventos')
+    return{ok:true}
+  }catch(error){
+    if(error instanceof Error&&error.message==='ORGANIZER_NOT_FOUND')return{error:'Selecciona un profesional o escuela activos'}
+    console.error('adminUpdateEvent',error);return{error:'No se pudo guardar el evento'}
+  }
 }
 
 export async function reviewEvent(form:FormData) {

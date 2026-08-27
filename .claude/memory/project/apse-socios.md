@@ -8,7 +8,7 @@
   comunicaciones, recuperación de contraseña, documentos privados e importador WordPress.
 - Export migrado el 2026-08-26: 400 socios creados desde 401 filas, sin enviar correos. Resultado:
   180 activos, 220 inactivos; 136 alumnos, 252 profesionales y 12 escuelas.
-- `npm run build`, `typecheck`, `lint` y siete pruebas críticas pasan. `npm audit`: cero vulnerabilidades.
+- `npm run build`, `typecheck`, `lint` y doce pruebas críticas pasan. `npm audit`: cero vulnerabilidades.
 - Revisión independiente cerrada: API pública con proyección explícita, migraciones inmutables,
   tokens de recuperación atómicos, auditoría transaccional y reautenticación al cambiar email.
 - Reconciliación: 120 perfiles visibles, 384 números conservados, 16 pendientes, 11 escuelas
@@ -56,6 +56,9 @@
   eliminarla; para conservar historial se recomienda usar `Inactivo`.
 - Los formularios de eventos muestran en español las validaciones de título, descripción y fechas;
   la descripción indica y exige en el navegador un mínimo de 20 caracteres.
+- Cada evento tiene una ficha administrativa completa. Desde ella se revisan y editan organizador,
+  contenido, imagen, fechas, modalidad, ubicación, contacto, inscripción, precio, destacado, notas y
+  estado; seleccionar `Aprobado` lo publica. Al volver se conserva el filtro del listado.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.

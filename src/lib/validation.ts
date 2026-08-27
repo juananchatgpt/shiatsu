@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { MEMBER_STATUSES, MEMBER_TYPES } from './domain'
+import { EVENT_STATUSES, MEMBER_STATUSES, MEMBER_TYPES } from './domain'
 
 const optionalText = z.string().trim().max(500).optional().or(z.literal(''))
 const optionalUrl = z.string().trim().url('URL no válida').optional().or(z.literal(''))
@@ -78,6 +78,14 @@ export const eventSchema = z.object({
   registrationUrl: optionalUrl, publicContact: optionalText, isFree: z.boolean(),
   priceEuros: z.coerce.number().min(0).max(100000).optional(), imageUrl: optionalUrl,
 }).refine((data) => new Date(data.endsAt) >= new Date(data.startsAt), { path: ['endsAt'], message: 'La fecha final debe ser posterior a la fecha de inicio' })
+
+export const adminEventUpdateSchema = eventSchema.and(z.object({
+  eventId: z.string().uuid('Evento no válido'),
+  organizerMembershipId: z.string().uuid('Selecciona un organizador válido'),
+  status: z.enum(EVENT_STATUSES),
+  moderationNotes: z.string().trim().max(5000, 'Las notas no pueden superar los 5.000 caracteres').optional().or(z.literal('')),
+  featured: z.boolean(),
+}))
 
 export const membershipStatusSchema = z.object({
   membershipId: z.string().uuid(), status: z.enum(MEMBER_STATUSES), reason: z.string().trim().max(1000).optional(),

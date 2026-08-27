@@ -23,6 +23,10 @@
 > **Update 2026-08-27 · borrado**: administración puede eliminar definitivamente un socio con
 > confirmación literal, borrado en cascada y auditoría. Se impide borrar un profesional que todavía
 > sea responsable de una escuela.
+>
+> **Update 2026-08-27 · moderación de eventos**: cada evento dispone de ficha administrativa con
+> edición completa de sus datos, organizador, visibilidad destacada, notas internas y estado. La
+> aprobación se realiza tras revisar la ficha y la vuelta conserva el filtro del listado.
 
 ---
 
