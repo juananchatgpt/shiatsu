@@ -19,6 +19,10 @@
 > **Update 2026-08-27 · altas**: la numeración automática continúa la serie histórica numérica, la
 > ubicación del alta se guarda en los datos privados y públicos, y las fichas activas normalizan la
 > fecha de renovación para evitar errores de renderizado.
+>
+> **Update 2026-08-27 · borrado**: administración puede eliminar definitivamente un socio con
+> confirmación literal, borrado en cascada y auditoría. Se impide borrar un profesional que todavía
+> sea responsable de una escuela.
 
 ---
 

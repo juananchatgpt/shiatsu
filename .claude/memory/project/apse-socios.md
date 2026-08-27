@@ -50,6 +50,10 @@
 - Las ubicaciones indicadas en el alta se conservan tanto en la parte privada como en la ficha
   pública. Las fechas de renovación se convierten a texto en la consulta para evitar errores 500
   al abrir una ficha recién activada.
+- La ficha administrativa permite borrar definitivamente un socio escribiendo `BORRAR`. El borrado
+  elimina por cascada cuenta, sesiones, perfil, documentos, imágenes, eventos y entregas preparadas,
+  y deja auditoría. Un profesional con una escuela vinculada no se puede borrar hasta reasignarla o
+  eliminarla; para conservar historial se recomienda usar `Inactivo`.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.

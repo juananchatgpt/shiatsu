@@ -1,9 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/access'
 import { query, withTransaction } from '@/lib/db'
-import { adminManualMemberSchema,adminMemberProfileSchema,membershipStatusSchema } from '@/lib/validation'
+import { adminDeleteMemberSchema,adminManualMemberSchema,adminMemberProfileSchema,membershipStatusSchema } from '@/lib/validation'
 import { hashPassword } from '@/lib/auth'
 import { FEES_CENTS,INSURANCE_FEE_CENTS } from '@/lib/domain'
 
@@ -25,6 +26,24 @@ export async function updateMembershipStatus(form:FormData) {
     await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.status_changed','membership',$2,$3::jsonb)`,[admin.id,membershipId,JSON.stringify({status,reason:reason||null})])
   })
   revalidatePath('/admin/socios'); revalidatePath(`/admin/socios/${membershipId}`); revalidatePath('/directorio')
+}
+
+export async function adminDeleteMember(_prev:{error?:string}|null,form:FormData){
+  const admin=await requireAdmin();const parsed=adminDeleteMemberSchema.safeParse({membershipId:text(form,'membershipId'),confirmation:text(form,'confirmation').trim()})
+  if(!parsed.success)return{error:parsed.error.issues[0]?.message??'No se pudo confirmar el borrado'}
+  const returnToRaw=text(form,'returnTo');const returnTo=returnToRaw==='/admin/socios'||returnToRaw.startsWith('/admin/socios?')?returnToRaw:'/admin/socios'
+  try{await withTransaction(async tx=>{
+    const rows=await tx<{user_id:string;member_type:string;member_number:string|null;has_school:boolean}>(`SELECT m.user_id,m.member_type,m.member_number,
+      EXISTS(SELECT 1 FROM school_profiles s WHERE s.responsible_professional_membership_id=m.id) has_school
+      FROM memberships m WHERE m.id=$1 FOR UPDATE`,[parsed.data.membershipId]);const member=rows[0]
+    if(!member)throw new Error('NOT_FOUND')
+    if(member.has_school)throw new Error('HAS_SCHOOL')
+    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.deleted','membership',$2,$3::jsonb)`,[admin.id,parsed.data.membershipId,JSON.stringify({memberType:member.member_type,memberNumber:member.member_number})])
+    await tx('DELETE FROM users WHERE id=$1',[member.user_id])
+  })}
+  catch(error){if(error instanceof Error&&error.message==='HAS_SCHOOL')return{error:'Este profesional tiene una escuela vinculada. Reasigna o elimina primero la escuela.'};if(error instanceof Error&&error.message==='NOT_FOUND')return{error:'El socio ya no existe'};return{error:'No se pudo borrar el socio'}}
+  revalidatePath('/admin/socios');revalidatePath('/directorio');revalidatePath('/eventos');revalidatePath('/embed/directorio');revalidatePath('/embed/eventos')
+  const separator=returnTo.includes('?')?'&':'?';redirect(`${returnTo}${separator}deleted=1`)
 }
 
 export async function createCommunicationDraft(form:FormData) {

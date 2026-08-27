@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { canCreateEvents, isPublicDirectoryMember } from '../src/lib/access'
-import {adminManualMemberSchema,adminMemberProfileSchema, registrationSchema, eventSchema } from '../src/lib/validation'
+import {adminDeleteMemberSchema,adminManualMemberSchema,adminMemberProfileSchema, registrationSchema, eventSchema } from '../src/lib/validation'
 
 test('un alumno nunca es publicable',()=>{assert.equal(isPublicDirectoryMember('student','active',true),false)})
 test('solo profesional/escuela activos y con opt-in son publicables',()=>{
@@ -31,4 +31,9 @@ test('el administrador debe repetir correctamente la nueva contraseña',()=>{
 test('el alta manual de escuela exige nombre del centro',()=>{
   const result=adminManualMemberSchema.safeParse({memberType:'school',status:'active',email:'escuela@example.com',password:'segura123',firstName:'Escuela',lastName:'',directoryOptIn:false,insuranceSelected:false,schoolName:''})
   assert.equal(result.success,false)
+})
+
+test('el borrado administrativo exige confirmación literal',()=>{
+  assert.equal(adminDeleteMemberSchema.safeParse({membershipId:'4fda7462-72dc-463c-b7ad-070cab5c7f0b',confirmation:'borrar'}).success,false)
+  assert.equal(adminDeleteMemberSchema.safeParse({membershipId:'4fda7462-72dc-463c-b7ad-070cab5c7f0b',confirmation:'BORRAR'}).success,true)
 })

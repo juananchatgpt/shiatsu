@@ -81,6 +81,11 @@ export const membershipStatusSchema = z.object({
   membershipId: z.string().uuid(), status: z.enum(MEMBER_STATUSES), reason: z.string().trim().max(1000).optional(),
 })
 
+export const adminDeleteMemberSchema = z.object({
+  membershipId: z.string().uuid(),
+  confirmation: z.literal('BORRAR', { errorMap: () => ({ message: 'Escribe BORRAR para confirmar' }) }),
+})
+
 export const adminMemberProfileSchema = profileSchema.extend({
   membershipId:z.string().uuid(),memberNumber:z.string().trim().max(50).optional().or(z.literal('')),
   anniversaryDate:z.string().date().optional().or(z.literal('')),internalNotes:z.string().trim().max(5000).optional().or(z.literal('')),
