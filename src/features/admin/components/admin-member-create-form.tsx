@@ -1,0 +1,27 @@
+'use client'
+
+import Link from 'next/link'
+import {useActionState,useState} from 'react'
+import {adminCreateMember} from '@/actions/admin'
+import {MEMBER_STATUSES,memberStatusLabels,memberTypeLabels,SPANISH_PROVINCES,type MemberType} from '@/lib/domain'
+
+export function AdminMemberCreateForm(){
+  const[type,setType]=useState<MemberType>('student');const[state,action,pending]=useActionState(adminCreateMember,null)
+  if(state?.ok&&state.membershipId)return <section className="apse-card p-8 text-center"><h2 className="text-2xl font-semibold text-emerald-950">Socio creado</h2><p className="mt-2 text-stone-600">No se ha enviado ningún correo.</p><div className="mt-6 flex justify-center gap-3"><Link className="apse-button" href={`/admin/socios/${state.membershipId}`}>Completar ficha</Link><Link className="apse-button-secondary" href="/admin/socios/nuevo">Crear otro</Link></div></section>
+  return <form action={action} className="space-y-6">
+    <Section title="Tipo y estado"><div className="grid gap-5 md:grid-cols-3"><Select label="Tipo de socio" name="memberType" value={type} onChange={value=>setType(value as MemberType)} options={Object.entries(memberTypeLabels)}/><Select label="Estado inicial" name="status" value="active" options={MEMBER_STATUSES.map(s=>[s,memberStatusLabels[s]])}/><Field name="memberNumber" label="Número de socio (opcional)"/></div><div className="mt-5 grid gap-5 md:grid-cols-2"><Field name="anniversaryDate" label="Fecha de renovación" type="date"/><div className="grid gap-3 sm:grid-cols-2">{type!=='student'&&<><Check name="directoryOptIn" label="Visible en el directorio"/><Check name="insuranceSelected" label="Seguro seleccionado"/></>}</div></div></Section>
+    <Section title="Acceso y datos privados"><div className="grid gap-5 md:grid-cols-2"><Field name="firstName" label="Nombre *" required/><Field name="lastName" label="Apellidos"/><Field name="email" label="Email de acceso *" type="email" required/><Field name="password" label="Contraseña inicial *" type="password" required minLength={8}/><Field name="identityDocument" label="DNI / NIE"/><Field name="phone" label="Teléfono"/><Field name="city" label="Municipio"/><Province name="province"/></div><p className="mt-4 text-xs text-stone-500">La cuenta se crea directamente y no genera ningún email.</p></Section>
+    {type==='student'&&<Section title="Formación"><Field name="schoolOrigin" label="Escuela de procedencia"/></Section>}
+    {type==='professional'&&<Section title="Formación profesional"><Field name="trainingSchool" label="Escuela de formación"/><Area name="qualificationSummary" label="Titulación o formación"/></Section>}
+    {type==='school'&&<Section title="Datos de la escuela"><div className="grid gap-5 md:grid-cols-2"><Field name="schoolName" label="Nombre de la escuela *" required/><Field name="responsibleMemberNumber" label="N.º del profesional responsable"/></div></Section>}
+    {type!=='student'&&<Section title="Ficha pública inicial"><div className="grid gap-5 md:grid-cols-2"><Field name="publicName" label="Nombre público"/><Field name="publicEmail" label="Email público" type="email"/><Field name="publicPhone" label="Teléfono público"/><Field name="publicCity" label="Municipio público"/><Province name="publicProvince"/><Field name="website" label="Web" type="url"/></div><Area name="bio" label="Presentación pública"/></Section>}
+    {state?.error&&<p className="rounded-2xl bg-red-50 p-4 text-sm text-red-700">{state.error}</p>}<button className="apse-button" disabled={pending}>{pending?'Creando…':'Crear socio'}</button>
+  </form>
+}
+
+function Section({title,children}:{title:string;children:React.ReactNode}){return <section className="apse-card p-6"><h2 className="text-xl font-semibold text-emerald-950">{title}</h2><div className="mt-5">{children}</div></section>}
+function Field({name,label,type='text',required=false,minLength}:{name:string;label:string;type?:string;required?:boolean;minLength?:number}){return <div><label className="apse-label" htmlFor={name}>{label}</label><input className="apse-input" id={name} name={name} type={type} required={required} minLength={minLength} autoComplete={type==='password'?'new-password':undefined}/></div>}
+function Area({name,label}:{name:string;label:string}){return <div className="mt-5"><label className="apse-label" htmlFor={name}>{label}</label><textarea className="apse-input min-h-28" id={name} name={name}/></div>}
+function Check({name,label}:{name:string;label:string}){return <label className="flex items-center gap-3 rounded-2xl border border-stone-200 p-4 text-sm font-semibold text-stone-700"><input type="checkbox" name={name}/>{label}</label>}
+function Province({name}:{name:string}){return <div><label className="apse-label" htmlFor={name}>Provincia</label><select className="apse-input" id={name} name={name}><option value="">Seleccionar</option>{SPANISH_PROVINCES.map(p=><option key={p}>{p}</option>)}</select></div>}
+function Select({label,name,value,options,onChange}:{label:string;name:string;value:string;options:string[][];onChange?:(value:string)=>void}){return <div><label className="apse-label" htmlFor={name}>{label}</label><select className="apse-input" id={name} name={name} defaultValue={value} onChange={event=>onChange?.(event.target.value)}>{options.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></div>}

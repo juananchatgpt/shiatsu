@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { canCreateEvents, isPublicDirectoryMember } from '../src/lib/access'
-import { registrationSchema, eventSchema } from '../src/lib/validation'
+import {adminManualMemberSchema,adminMemberProfileSchema, registrationSchema, eventSchema } from '../src/lib/validation'
 
 test('un alumno nunca es publicable',()=>{assert.equal(isPublicDirectoryMember('student','active',true),false)})
 test('solo profesional/escuela activos y con opt-in son publicables',()=>{
@@ -20,5 +20,15 @@ test('alta de escuela exige profesional responsable',()=>{
 })
 test('un evento no puede terminar antes de comenzar',()=>{
   const result=eventSchema.safeParse({title:'Curso de Shiatsu',description:'Descripción suficientemente larga para validar.',startsAt:'2026-09-20T18:00',endsAt:'2026-09-20T17:00',allDay:false,modality:'in_person',isFree:true})
+  assert.equal(result.success,false)
+})
+
+test('el administrador debe repetir correctamente la nueva contraseña',()=>{
+  const result=adminMemberProfileSchema.safeParse({membershipId:'67dbc9f8-bf06-4b5c-9396-297dd74d571a',email:'socio@example.com',firstName:'Socio',lastName:'APSE',directoryOptIn:false,insuranceSelected:false,newPassword:'segura123',confirmPassword:'distinta123'})
+  assert.equal(result.success,false)
+})
+
+test('el alta manual de escuela exige nombre del centro',()=>{
+  const result=adminManualMemberSchema.safeParse({memberType:'school',status:'active',email:'escuela@example.com',password:'segura123',firstName:'Escuela',lastName:'',directoryOptIn:false,insuranceSelected:false,schoolName:''})
   assert.equal(result.success,false)
 })

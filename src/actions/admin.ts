@@ -3,9 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/access'
 import { query, withTransaction } from '@/lib/db'
-import { adminMemberProfileSchema,membershipStatusSchema } from '@/lib/validation'
+import { adminManualMemberSchema,adminMemberProfileSchema,membershipStatusSchema } from '@/lib/validation'
 import { hashPassword } from '@/lib/auth'
-import { INSURANCE_FEE_CENTS } from '@/lib/domain'
+import { FEES_CENTS,INSURANCE_FEE_CENTS } from '@/lib/domain'
+
+const UUID_PATTERN=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 export async function updateMembershipStatus(form:FormData) {
   const admin=await requireAdmin()
@@ -33,14 +35,68 @@ export async function createCommunicationDraft(form:FormData) {
   revalidatePath('/admin/comunicaciones')
 }
 
+export async function deleteCommunicationDraft(form:FormData){
+  const admin=await requireAdmin();const id=String(form.get('draftId')??'')
+  if(!UUID_PATTERN.test(id))return
+  await withTransaction(async tx=>{
+    const drafts=await tx<{id:string}>('SELECT id FROM communication_drafts WHERE id=$1 FOR UPDATE',[id]);if(!drafts[0])return
+    await tx('DELETE FROM communication_deliveries WHERE batch_id IN (SELECT id FROM communication_batches WHERE draft_id=$1)',[id])
+    await tx('DELETE FROM communication_batches WHERE draft_id=$1',[id])
+    await tx('DELETE FROM communication_drafts WHERE id=$1',[id])
+    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'communication.deleted','communication_draft',$2)`,[admin.id,id])
+  })
+  revalidatePath('/admin/comunicaciones')
+}
+
 export async function createAdminAccount(_prev:{ok?:boolean;error?:string}|null,form:FormData){
   const actor=await requireAdmin();const email=String(form.get('email')??'').trim().toLowerCase();const name=String(form.get('fullName')??'').trim();const password=String(form.get('password')??'')
   if(!email.includes('@')||name.length<2||password.length<8)return{error:'Revisa nombre, email y contraseña (mínimo 8 caracteres)'}
   try{await withTransaction(async tx=>{const rows=await tx<{id:string}>(`INSERT INTO users(email,password_hash,full_name,role) VALUES($1,$2,$3,'admin') RETURNING id`,[email,await hashPassword(password),name]);await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'admin.created','user',$2)`,[actor.id,rows[0].id])});revalidatePath('/admin/administradores');return{ok:true}}catch(error){if(typeof error==='object'&&error&&'code'in error&&error.code==='23505')return{error:'Ese email ya existe'};return{error:'No se pudo crear el administrador'}}
 }
 
+export async function setAdminActive(_prev:{ok?:boolean;error?:string}|null,form:FormData){
+  const actor=await requireAdmin();const targetId=String(form.get('adminId')??'');const active=form.get('active')==='true'
+  if(!UUID_PATTERN.test(targetId))return{error:'Administrador no válido'}
+  if(!active&&targetId===actor.id)return{error:'No puedes desactivar tu propia cuenta'}
+  try{await withTransaction(async tx=>{
+    const targets=await tx<{active:boolean}>(`SELECT active FROM users WHERE id=$1 AND role='admin' FOR UPDATE`,[targetId]);if(!targets[0])throw new Error('NOT_FOUND')
+    if(!active){const current=await tx<{id:string}>(`SELECT id FROM users WHERE role='admin' AND active=true FOR UPDATE`);if(current.length<=1)throw new Error('LAST_ADMIN')}
+    await tx('UPDATE users SET active=$1,updated_at=now() WHERE id=$2',[active,targetId])
+    if(!active)await tx('DELETE FROM sessions WHERE user_id=$1',[targetId])
+    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'admin.active_changed','user',$2,$3::jsonb)`,[actor.id,targetId,JSON.stringify({active})])
+  });revalidatePath('/admin/administradores');return{ok:true}}
+  catch(error){if(error instanceof Error&&error.message==='LAST_ADMIN')return{error:'Debe quedar al menos un administrador activo'};return{error:'No se pudo cambiar el estado'}}
+}
+
 const text=(form:FormData,name:string)=>String(form.get(name)??'')
 const checked=(form:FormData,name:string)=>form.get(name)==='on'
+
+export async function adminCreateMember(_prev:{ok?:boolean;error?:string;membershipId?:string}|null,form:FormData){
+  const admin=await requireAdmin();const parsed=adminManualMemberSchema.safeParse({
+    memberType:text(form,'memberType'),status:text(form,'status'),email:text(form,'email'),password:text(form,'password'),
+    firstName:text(form,'firstName'),lastName:text(form,'lastName'),memberNumber:text(form,'memberNumber'),anniversaryDate:text(form,'anniversaryDate'),
+    identityDocument:text(form,'identityDocument'),phone:text(form,'phone'),city:text(form,'city'),province:text(form,'province'),
+    directoryOptIn:checked(form,'directoryOptIn'),insuranceSelected:checked(form,'insuranceSelected'),schoolOrigin:text(form,'schoolOrigin'),
+    trainingSchool:text(form,'trainingSchool'),qualificationSummary:text(form,'qualificationSummary'),schoolName:text(form,'schoolName'),
+    responsibleMemberNumber:text(form,'responsibleMemberNumber'),publicName:text(form,'publicName'),publicEmail:text(form,'publicEmail'),
+    publicPhone:text(form,'publicPhone'),publicCity:text(form,'publicCity'),publicProvince:text(form,'publicProvince'),website:text(form,'website'),bio:text(form,'bio'),
+  });if(!parsed.success)return{error:parsed.error.issues[0]?.message??'Revisa los datos'};const d=parsed.data
+  try{let membershipId='';await withTransaction(async tx=>{
+    let responsibleId:string|null=null;if(d.memberType==='school'&&d.responsibleMemberNumber){const responsible=await tx<{id:string}>(`SELECT id FROM memberships WHERE member_number=$1 AND member_type='professional' LIMIT 1`,[d.responsibleMemberNumber]);if(!responsible[0])throw new Error('RESPONSIBLE_NOT_FOUND');responsibleId=responsible[0].id}
+    const users=await tx<{id:string}>(`INSERT INTO users(email,password_hash,full_name,role,email_verified_at) VALUES($1,$2,$3,'member',now()) RETURNING id`,[d.email,await hashPassword(d.password),`${d.firstName} ${d.lastName}`.trim()])
+    const insured=d.memberType!=='student'&&d.insuranceSelected
+    const memberships=await tx<{id:string}>(`INSERT INTO memberships(user_id,member_number,member_type,status,insurance_selected,base_fee_cents,insurance_fee_cents,anniversary_date,directory_opt_in,privacy_accepted_at,approved_by,approved_at)
+      VALUES($1,COALESCE(NULLIF($2,''),CASE WHEN $3='active' THEN 'APSE-'||LPAD(nextval('member_number_seq')::text,5,'0') END),$4,$3,$5,$6,$7,NULLIF($8,'')::date,$9,now(),CASE WHEN $3='active' THEN $10 END,CASE WHEN $3='active' THEN now() END) RETURNING id`,
+      [users[0].id,d.memberNumber||'',d.status,d.memberType,insured,FEES_CENTS[d.memberType],insured?INSURANCE_FEE_CENTS:0,d.anniversaryDate||'',d.memberType!=='student'&&d.directoryOptIn,admin.id]);membershipId=memberships[0].id
+    await tx(`INSERT INTO member_profiles(membership_id,first_name,last_name,identity_document,phone,city,province,public_name,public_email,public_phone,public_city,public_province,website,bio)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,[membershipId,d.firstName,d.lastName,d.identityDocument||null,d.phone||null,d.city||null,d.province||null,d.publicName||null,d.publicEmail||null,d.publicPhone||null,d.publicCity||null,d.publicProvince||null,d.website||null,d.bio||null])
+    if(d.memberType==='student')await tx('INSERT INTO student_profiles(membership_id,school_origin) VALUES($1,$2)',[membershipId,d.schoolOrigin||'Sin especificar'])
+    if(d.memberType==='professional')await tx('INSERT INTO professional_profiles(membership_id,training_school,qualification_summary) VALUES($1,$2,$3)',[membershipId,d.trainingSchool||null,d.qualificationSummary||null])
+    if(d.memberType==='school')await tx(`INSERT INTO school_profiles(membership_id,responsible_professional_membership_id,school_name) VALUES($1,$2,$3)`,[membershipId,responsibleId,d.schoolName])
+    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.created_by_admin','membership',$2,$3::jsonb)`,[admin.id,membershipId,JSON.stringify({memberType:d.memberType,status:d.status})])
+  });revalidatePath('/admin/socios');return{ok:true,membershipId}}
+  catch(error){if(error instanceof Error&&error.message==='RESPONSIBLE_NOT_FOUND')return{error:'El número indicado no pertenece a un profesional'};if(typeof error==='object'&&error&&'code'in error&&error.code==='23505')return{error:'El email, número de socio o profesional responsable ya está en uso'};return{error:'No se pudo crear el socio'}}
+}
 
 export async function adminUpdateMemberProfile(_prev:{ok?:boolean;error?:string}|null,form:FormData){
   const admin=await requireAdmin()
@@ -55,13 +111,15 @@ export async function adminUpdateMemberProfile(_prev:{ok?:boolean;error?:string}
     qualificationSummary:text(form,'qualificationSummary'),teachingLevel:text(form,'teachingLevel'),teachingSchools:text(form,'teachingSchools'),
     teachingSinceYear:text(form,'teachingSinceYear'),schoolName:text(form,'schoolName'),schoolDescription:text(form,'schoolDescription'),centerType:text(form,'centerType'),
     languages:text(form,'languages'),programSummary:text(form,'programSummary'),teachersSummary:text(form,'teachersSummary'),directionExperienceSummary:text(form,'directionExperienceSummary'),
-    responsibleMemberNumber:text(form,'responsibleMemberNumber'),
+    responsibleMemberNumber:text(form,'responsibleMemberNumber'),newPassword:text(form,'newPassword'),confirmPassword:text(form,'confirmPassword'),
   })
   if(!parsed.success)return{error:parsed.error.issues[0]?.message??'Revisa los datos'}
   const d=parsed.data
   try{await withTransaction(async tx=>{
     const members=await tx<{user_id:string;member_type:'student'|'professional'|'school'}>('SELECT user_id,member_type FROM memberships WHERE id=$1 LIMIT 1',[d.membershipId]);const member=members[0];if(!member)throw new Error('NOT_FOUND')
-    await tx('UPDATE users SET email=$1,full_name=$2,updated_at=now() WHERE id=$3',[d.email,`${d.firstName} ${d.lastName}`.trim(),member.user_id])
+    const passwordHash=d.newPassword?await hashPassword(d.newPassword):null
+    await tx(`UPDATE users SET email=$1,full_name=$2,password_hash=COALESCE($3,password_hash),password_reset_required=CASE WHEN $3 IS NULL THEN password_reset_required ELSE false END,updated_at=now() WHERE id=$4`,[d.email,`${d.firstName} ${d.lastName}`.trim(),passwordHash,member.user_id])
+    if(passwordHash){await tx('DELETE FROM sessions WHERE user_id=$1',[member.user_id]);await tx('DELETE FROM password_reset_tokens WHERE user_id=$1',[member.user_id])}
     const insured=member.member_type!=='student'&&d.insuranceSelected
     await tx(`UPDATE memberships SET member_number=$1,anniversary_date=NULLIF($2,'')::date,internal_notes=$3,directory_opt_in=$4,
       insurance_selected=$5,insurance_fee_cents=$6,updated_at=now() WHERE id=$7`,[d.memberNumber||null,d.anniversaryDate||'',d.internalNotes||null,
@@ -74,7 +132,7 @@ export async function adminUpdateMemberProfile(_prev:{ok?:boolean;error?:string}
     if(member.member_type==='student')await tx('UPDATE student_profiles SET school_origin=$1 WHERE membership_id=$2',[d.schoolOrigin||'Sin especificar',d.membershipId])
     if(member.member_type==='professional')await tx(`UPDATE professional_profiles SET training_school=$1,qualification_summary=$2,teaching_level=$3,teaching_schools=$4,teaching_since_year=$5 WHERE membership_id=$6`,[d.trainingSchool||null,d.qualificationSummary||null,d.teachingLevel||null,d.teachingSchools||null,d.teachingSinceYear||null,d.membershipId])
     if(member.member_type==='school'){let responsibleId:null|string=null;if(d.responsibleMemberNumber){const responsible=await tx<{id:string}>(`SELECT id FROM memberships WHERE member_number=$1 AND member_type='professional' LIMIT 1`,[d.responsibleMemberNumber]);if(!responsible[0])throw new Error('RESPONSIBLE_NOT_FOUND');responsibleId=responsible[0].id}await tx(`UPDATE school_profiles SET school_name=$1,description=$2,program_summary=$3,teachers_summary=$4,direction_experience_summary=$5,center_type=$6,languages=$7,responsible_professional_membership_id=$8 WHERE membership_id=$9`,[d.schoolName||'Escuela',d.schoolDescription||null,d.programSummary||null,d.teachersSummary||null,d.directionExperienceSummary||null,d.centerType||null,d.languages||null,responsibleId,d.membershipId])}
-    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'membership.profile_updated_by_admin','membership',$2)`,[admin.id,d.membershipId])
+    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.profile_updated_by_admin','membership',$2,$3::jsonb)`,[admin.id,d.membershipId,JSON.stringify({passwordChanged:Boolean(passwordHash)})])
   });revalidatePath('/admin/socios');revalidatePath(`/admin/socios/${d.membershipId}`);revalidatePath('/directorio');revalidatePath(`/directorio/${d.membershipId}`);revalidatePath('/embed/directorio');return{ok:true}}
   catch(error){if(error instanceof Error&&error.message==='RESPONSIBLE_NOT_FOUND')return{error:'El número indicado no pertenece a un profesional'};if(typeof error==='object'&&error&&'code'in error&&error.code==='23505')return{error:'El email, número de socio o profesional responsable ya está en uso'};return{error:'No se pudieron guardar los cambios'}}
 }

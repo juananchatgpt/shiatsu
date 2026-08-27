@@ -84,5 +84,23 @@ export const membershipStatusSchema = z.object({
 export const adminMemberProfileSchema = profileSchema.extend({
   membershipId:z.string().uuid(),memberNumber:z.string().trim().max(50).optional().or(z.literal('')),
   anniversaryDate:z.string().date().optional().or(z.literal('')),internalNotes:z.string().trim().max(5000).optional().or(z.literal('')),
-  responsibleMemberNumber:optionalText,
+  responsibleMemberNumber:optionalText,newPassword:z.string().max(128).optional().or(z.literal('')),
+  confirmPassword:z.string().max(128).optional().or(z.literal('')),
+}).superRefine((data,ctx)=>{
+  if(data.newPassword&&data.newPassword.length<8)ctx.addIssue({code:'custom',path:['newPassword'],message:'La nueva contraseña debe tener al menos 8 caracteres'})
+  if(data.newPassword!==data.confirmPassword)ctx.addIssue({code:'custom',path:['confirmPassword'],message:'Las contraseñas no coinciden'})
+})
+
+export const adminManualMemberSchema=z.object({
+  memberType:z.enum(MEMBER_TYPES),status:z.enum(MEMBER_STATUSES),email:z.string().trim().toLowerCase().email().max(254),
+  password:z.string().min(8,'La contraseña debe tener al menos 8 caracteres').max(128),
+  firstName:z.string().trim().min(2,'Indica el nombre').max(100),lastName:z.string().trim().max(150),
+  memberNumber:z.string().trim().max(50).optional().or(z.literal('')),anniversaryDate:z.string().date().optional().or(z.literal('')),
+  identityDocument:z.string().trim().max(30).optional().or(z.literal('')),phone:optionalText,city:optionalText,province:optionalText,
+  directoryOptIn:z.boolean(),insuranceSelected:z.boolean(),schoolOrigin:optionalText,trainingSchool:optionalText,
+  qualificationSummary:z.string().trim().max(2500).optional().or(z.literal('')),schoolName:optionalText,
+  responsibleMemberNumber:optionalText,publicName:optionalText,publicEmail:z.string().trim().email().optional().or(z.literal('')),
+  publicPhone:optionalText,publicCity:optionalText,publicProvince:optionalText,website:optionalUrl,bio:z.string().trim().max(2500).optional().or(z.literal('')),
+}).superRefine((data,ctx)=>{
+  if(data.memberType==='school'&&!data.schoolName)ctx.addIssue({code:'custom',path:['schoolName'],message:'Indica el nombre de la escuela'})
 })

@@ -7,6 +7,10 @@
 > **Update 2026-08-27**: el directorio ya usa tarjetas-resumen y fichas individuales; se añadieron
 > portadas, tipo de centro e idiomas para escuelas, y la administración permite editar el perfil
 > completo y sus imágenes. Migración `005` aplicada y validada sin envíos de correo.
+>
+> **Update 2026-08-27 · administración**: se incorporan altas manuales de socios y eventos, cambio
+> administrativo de contraseña, eliminación de borradores de comunicación y desactivación reversible
+> de administradores con protección del último administrador activo. Las altas manuales no envían email.
 
 ---
 

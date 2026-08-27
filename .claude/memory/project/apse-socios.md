@@ -38,6 +38,12 @@
   además de ver/cambiar/eliminar foto y portada. Los socios escuela también gestionan su portada.
 - Verificación HTTP local: 120 fichas públicas con respuesta 200, cero fallos; una ficha y portada de
   socio inactivo devuelven 404. La API de listado devuelve únicamente ocho campos de resumen.
+- Administración ampliada el 2026-08-27: alta manual de socios sin email, creación de eventos en
+  borrador/revisión/publicados, borrado de borradores de comunicación, cambio de contraseña de socios
+  y activación/desactivación de administradores.
+- Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
+  Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
+  el sistema sin un administrador activo.
 - Primer administrador: Juanan Sanchez (`jnansanler@gmail.com`), activación enviada por SMTP.
 - GitHub remoto configurado y rama `main` publicada en `juananchatgpt/shiatsu`.
 - SMTP validado tras corregir `SMTP_SECURE=true` para el puerto 465; invitación entregada al servidor.
@@ -62,6 +68,10 @@
 - Las portadas usan `membership_cover_images`; son exclusivas de escuelas y aplican las mismas reglas
   de privacidad pública que las fotos.
 - Fase 1 no gestiona pagos ni campañas masivas.
+- Las altas manuales administrativas crean una contraseña inicial y no envían ningún correo. Si el
+  estado inicial es activo y no se indica número, la aplicación asigna el siguiente número APSE.
+- Los eventos creados por administración se vinculan siempre a un profesional o escuela activos y
+  las horas se interpretan explícitamente en `Europe/Madrid`.
 - Importados no conservan hashes de acceso; requieren recuperación de contraseña.
 - Por instrucción expresa, la migración no envía ningún correo; cada socio recuperará su contraseña
   individualmente cuando necesite acceder.

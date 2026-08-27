@@ -26,3 +26,9 @@ export async function getMemberEvent(id:string,membershipId:string){
 export async function listAdminEvents(status?:string) {
   return query<EventRow>(`${SELECT} ${status?'WHERE e.status=$1':''} ORDER BY CASE e.status WHEN 'pending_review' THEN 0 ELSE 1 END,e.created_at DESC LIMIT 300`,status?[status]:[])
 }
+
+export interface EventOrganizerOption{id:string;name:string;member_type:'professional'|'school'}
+export async function listEventOrganizerOptions(){return query<EventOrganizerOption>(`SELECT m.id,m.member_type,
+  COALESCE(sc.school_name,NULLIF(p.public_name,''),p.first_name||' '||p.last_name) name FROM memberships m
+  JOIN member_profiles p ON p.membership_id=m.id LEFT JOIN school_profiles sc ON sc.membership_id=m.id
+  WHERE m.status='active' AND m.member_type IN ('professional','school') ORDER BY name`)}
