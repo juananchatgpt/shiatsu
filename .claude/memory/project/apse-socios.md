@@ -63,6 +63,10 @@
 - GitHub remoto configurado y rama `main` publicada en `juananchatgpt/shiatsu`.
 - SMTP validado tras corregir `SMTP_SECURE=true` para el puerto 465; invitación entregada al servidor.
 - Aplicación desplegada y operativa: `/api/health` y la API del directorio responden correctamente.
+- El despliegue de `alzat/shiatsuapp` en `easypanel.alza-t.com` es manual: el push a `main` no lanza
+  el build. Si el panel no está autenticado, se puede construir una imagen desde `git archive` por
+  SSH y actualizar únicamente la imagen del servicio, conservando su configuración y verificando
+  después la web y `/api/health`.
 
 ## Pendiente del cliente/infraestructura
 
