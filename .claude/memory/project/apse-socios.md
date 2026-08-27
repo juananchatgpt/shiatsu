@@ -86,4 +86,4 @@
 - Inspeccionar export sin escribir: `npm run wp:inspect`; importar solo con autorización mediante
   `npm run wp:import`, que genera un informe ignorado por Git.
 - Instantánea previa conservada en el esquema PostgreSQL `backup_pre_wp_import_20260826`.
-- Commits de cierre: `ec01a06`, `bd1284b`, `6ed493b`, `173dbe9`.
+- Commits de cierre: `ec01a06`, `bd1284b`, `6ed493b`, `173dbe9`, `3f0dcfb`, `fe3b475`.
