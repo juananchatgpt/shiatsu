@@ -41,6 +41,10 @@
 - Administración ampliada el 2026-08-27: alta manual de socios sin email, creación de eventos en
   borrador/revisión/publicados, borrado de borradores de comunicación, cambio de contraseña de socios
   y activación/desactivación de administradores.
+- El listado administrativo separa `Socios actuales`, `Inactivos` y `Todos`, con recuentos reales.
+  La búsqueda, tipo, estado y pestaña se conservan al abrir una ficha y volver al listado.
+- El selector de provincias del directorio se alimenta solo de perfiles activos, visibles y con
+  provincia; al elegir profesionales o escuelas se recalcula para ese tipo.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.

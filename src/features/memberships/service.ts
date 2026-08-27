@@ -63,11 +63,13 @@ export interface AdminMemberRow {
   province: string | null; created_at: string
 }
 
-export async function listAdminMembers(filters: { type?: string; status?: string; search?: string } = {}) {
+export async function listAdminMembers(filters: { type?: string; status?: string; search?: string; scope?:'current'|'inactive'|'all' } = {}) {
   const conditions: string[] = []
   const params: unknown[] = []
   if (filters.type) { params.push(filters.type); conditions.push(`m.member_type = $${params.length}`) }
   if (filters.status) { params.push(filters.status); conditions.push(`m.status = $${params.length}`) }
+  else if(filters.scope==='inactive')conditions.push(`m.status = 'inactive'`)
+  else if(filters.scope!=='all')conditions.push(`m.status <> 'inactive'`)
   if (filters.search) {
     params.push(`%${filters.search}%`)
     conditions.push(`(p.first_name ILIKE $${params.length} OR p.last_name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR m.member_number ILIKE $${params.length})`)
@@ -80,6 +82,10 @@ export async function listAdminMembers(filters: { type?: string; status?: string
      ORDER BY CASE m.status WHEN 'pending' THEN 0 ELSE 1 END, m.created_at DESC LIMIT 500`, params,
   )
 }
+
+export async function getAdminMemberScopeCounts(){const rows=await query<{current:number;inactive:number;total:number}>(`SELECT
+  COUNT(*) FILTER(WHERE status<>'inactive')::int current,COUNT(*) FILTER(WHERE status='inactive')::int inactive,COUNT(*)::int total FROM memberships`)
+  return rows[0]??{current:0,inactive:0,total:0}}
 
 export interface PublicDirectoryRow {
   id: string; member_type: 'professional' | 'school'; name: string; public_city: string | null
@@ -110,6 +116,11 @@ export async function listPublicDirectory(filters: { type?: string; province?: s
      WHERE ${conditions.join(' AND ')} ORDER BY name ASC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params,filters.limit??250,filters.offset??0],
   )
 }
+
+export async function listPublicDirectoryProvinces(type?:string){const params:unknown[]=[];const conditions=["m.status='active'",'m.directory_opt_in=true',"m.member_type IN ('professional','school')","NULLIF(BTRIM(p.public_province),'') IS NOT NULL"]
+  if(type&&['professional','school'].includes(type)){params.push(type);conditions.push(`m.member_type=$${params.length}`)}
+  const rows=await query<{province:string}>(`SELECT DISTINCT BTRIM(p.public_province) province FROM memberships m JOIN member_profiles p ON p.membership_id=m.id WHERE ${conditions.join(' AND ')} ORDER BY province`,params)
+  return rows.map(row=>row.province)}
 
 export interface PublicDirectoryDetail extends PublicDirectoryRow {
   public_email:string|null;public_phone:string|null;public_address:string|null;public_postal_code:string|null

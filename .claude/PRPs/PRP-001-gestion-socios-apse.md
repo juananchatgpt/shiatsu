@@ -11,6 +11,10 @@
 > **Update 2026-08-27 · administración**: se incorporan altas manuales de socios y eventos, cambio
 > administrativo de contraseña, eliminación de borradores de comunicación y desactivación reversible
 > de administradores con protección del último administrador activo. Las altas manuales no envían email.
+>
+> **Update 2026-08-27 · navegación**: el listado de socios separa actuales, inactivos y todos, y
+> conserva filtros y pestaña al volver desde una ficha. El directorio ofrece únicamente provincias
+> que tienen perfiles publicables y adapta las opciones al tipo de socio seleccionado.
 
 ---
 
