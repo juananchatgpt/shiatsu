@@ -1,6 +1,6 @@
 # APSE · Gestión de socios
 
-## Estado 2026-08-26
+## Estado 2026-08-27
 
 - Aplicación fase 1 construida desde SaaS Factory Postgres.
 - PRP activo: `../../PRPs/PRP-001-gestion-socios-apse.md`.
@@ -8,7 +8,7 @@
   comunicaciones, recuperación de contraseña, documentos privados e importador WordPress.
 - Export migrado el 2026-08-26: 400 socios creados desde 401 filas, sin enviar correos. Resultado:
   180 activos, 220 inactivos; 136 alumnos, 252 profesionales y 12 escuelas.
-- `npm run build`, `typecheck`, `lint` y seis pruebas críticas pasan. `npm audit`: cero vulnerabilidades.
+- `npm run build`, `typecheck`, `lint` y siete pruebas críticas pasan. `npm audit`: cero vulnerabilidades.
 - Revisión independiente cerrada: API pública con proyección explícita, migraciones inmutables,
   tokens de recuperación atómicos, auditoría transaccional y reautenticación al cambiar email.
 - Reconciliación: 120 perfiles visibles, 384 números conservados, 16 pendientes, 11 escuelas
@@ -25,7 +25,19 @@
 - Migración `004` aplicada: Twitter/X (3), nivel docente (9), escuelas donde imparte (7), año de
   inicio docente (8) y observaciones a notas internas (149). Snapshot:
   `backup_pre_directory_import_20260826`.
-- PostgreSQL `shiatsu` conectado y migraciones `001` a `004` aplicadas el 2026-08-26.
+- PostgreSQL `shiatsu` conectado y migraciones `001` a `005` aplicadas.
+- El directorio público usa ahora tarjetas-resumen y una ficha individual por socio. El listado no
+  expone contacto, dirección ni biografía: esos datos se consultan solo al abrir una ficha pública.
+- Las fichas públicas se diseñaron a partir de las 11 fichas históricas entregadas. Incluyen portada,
+  logotipo/foto, contacto público, ubicación, mapa, idiomas, redes y contenido específico por tipo.
+- Se añadieron a escuelas los campos `center_type` e `languages`; se recuperaron 12 emails públicos
+  históricos y se limpiaron valores de relleno. Las portadas se guardan como `BYTEA` en
+  `membership_cover_images`: 8 importadas, 5 visibles por estado y consentimiento. Snapshot previo:
+  `backup_pre_profile_design_20260826`.
+- La ficha administrativa permite editar toda la información privada, pública y específica del tipo,
+  además de ver/cambiar/eliminar foto y portada. Los socios escuela también gestionan su portada.
+- Verificación HTTP local: 120 fichas públicas con respuesta 200, cero fallos; una ficha y portada de
+  socio inactivo devuelven 404. La API de listado devuelve únicamente ocho campos de resumen.
 - Primer administrador: Juanan Sanchez (`jnansanler@gmail.com`), activación enviada por SMTP.
 - GitHub remoto configurado y rama `main` publicada en `juananchatgpt/shiatsu`.
 - SMTP validado tras corregir `SMTP_SECURE=true` para el puerto 465; invitación entregada al servidor.
@@ -47,6 +59,8 @@
   propietario/administrador, límite de 5 MB y descarga `no-store`; entran en el backup de PostgreSQL.
 - Las fotos usan `membership_profile_photos`; solo profesionales/escuelas pueden subir nuevas y la
   ruta pública exige socio activo, consentimiento de directorio y tipo profesional/escuela.
+- Las portadas usan `membership_cover_images`; son exclusivas de escuelas y aplican las mismas reglas
+  de privacidad pública que las fotos.
 - Fase 1 no gestiona pagos ni campañas masivas.
 - Importados no conservan hashes de acceso; requieren recuperación de contraseña.
 - Por instrucción expresa, la migración no envía ningún correo; cada socio recuperará su contraseña

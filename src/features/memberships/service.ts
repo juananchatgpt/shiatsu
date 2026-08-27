@@ -15,7 +15,8 @@ export interface MembershipDetail {
   has_photo:boolean
   qualification_summary:string|null; teaching_level:string|null; teaching_schools:string|null; teaching_since_year:number|null
   school_description:string|null; program_summary:string|null
-  teachers_summary:string|null; direction_experience_summary:string|null
+  teachers_summary:string|null; direction_experience_summary:string|null; center_type:string|null; languages:string|null
+  has_cover:boolean
   created_at: string; updated_at: string
 }
 
@@ -28,8 +29,9 @@ const DETAIL_SELECT = `
     p.public_city, p.public_province, p.website, p.bio, p.facebook_url, p.instagram_url, p.youtube_url,p.twitter_url,
     st.school_origin, pr.training_school, pr.qualification_summary,pr.teaching_level,pr.teaching_schools,pr.teaching_since_year,
     sc.school_name, sc.description AS school_description,
-    sc.program_summary,sc.teachers_summary,sc.direction_experience_summary,
+    sc.program_summary,sc.teachers_summary,sc.direction_experience_summary,sc.center_type,sc.languages,
     EXISTS(SELECT 1 FROM membership_profile_photos ph WHERE ph.membership_id=m.id) has_photo,m.created_at, m.updated_at
+    ,EXISTS(SELECT 1 FROM membership_cover_images ci WHERE ci.membership_id=m.id) has_cover
   FROM memberships m JOIN users u ON u.id = m.user_id
   JOIN member_profiles p ON p.membership_id = m.id
   LEFT JOIN student_profiles st ON st.membership_id = m.id
@@ -44,6 +46,15 @@ export async function getMembershipByUser(userId: string) {
 export async function getMembershipById(id: string) {
   const rows = await query<MembershipDetail>(`${DETAIL_SELECT} WHERE m.id = $1 LIMIT 1`, [id])
   return rows[0] ?? null
+}
+
+export interface AdminMembershipEdit extends MembershipDetail{internal_notes:string|null;responsible_member_number:string|null}
+export async function getAdminMembershipForEdit(id:string){
+  const detail=await getMembershipById(id);if(!detail)return null
+  const rows=await query<{internal_notes:string|null;responsible_member_number:string|null}>(`SELECT m.internal_notes,r.member_number responsible_member_number
+    FROM memberships m LEFT JOIN school_profiles sc ON sc.membership_id=m.id
+    LEFT JOIN memberships r ON r.id=sc.responsible_professional_membership_id WHERE m.id=$1 LIMIT 1`,[id])
+  return{...detail,internal_notes:rows[0]?.internal_notes??null,responsible_member_number:rows[0]?.responsible_member_number??null} satisfies AdminMembershipEdit
 }
 
 export interface AdminMemberRow {
@@ -71,10 +82,8 @@ export async function listAdminMembers(filters: { type?: string; status?: string
 }
 
 export interface PublicDirectoryRow {
-  id: string; member_type: 'professional' | 'school'; name: string; public_email: string | null
-  public_phone: string | null; public_city: string | null; public_province: string | null
-  website: string | null; bio: string | null; has_photo:boolean; photo_version:string|null; school_name: string | null
-  training_school: string | null
+  id: string; member_type: 'professional' | 'school'; name: string; public_city: string | null
+  public_province: string | null; has_photo:boolean; photo_version:string|null; center_type:string|null
 }
 
 export async function listPublicDirectory(filters: { type?: string; province?: string; search?: string; limit?:number; offset?:number } = {}) {
@@ -91,15 +100,40 @@ export async function listPublicDirectory(filters: { type?: string; province?: s
   return query<PublicDirectoryRow>(
     `SELECT m.id, m.member_type,
       COALESCE(sc.school_name, NULLIF(p.public_name,''), p.first_name || ' ' || p.last_name) AS name,
-      p.public_email, p.public_phone, p.public_city, p.public_province, p.website, p.bio,
+      p.public_city, p.public_province,
       (ph.membership_id IS NOT NULL) has_photo,EXTRACT(EPOCH FROM ph.updated_at)::bigint::text photo_version,
-      sc.school_name, pr.training_school
+      sc.center_type
      FROM memberships m JOIN member_profiles p ON p.membership_id=m.id
      LEFT JOIN professional_profiles pr ON pr.membership_id=m.id
      LEFT JOIN school_profiles sc ON sc.membership_id=m.id
      LEFT JOIN membership_profile_photos ph ON ph.membership_id=m.id
      WHERE ${conditions.join(' AND ')} ORDER BY name ASC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params,filters.limit??250,filters.offset??0],
   )
+}
+
+export interface PublicDirectoryDetail extends PublicDirectoryRow {
+  public_email:string|null;public_phone:string|null;public_address:string|null;public_postal_code:string|null
+  website:string|null;bio:string|null;facebook_url:string|null;instagram_url:string|null;youtube_url:string|null;twitter_url:string|null
+  training_school:string|null;qualification_summary:string|null;teaching_level:string|null;teaching_schools:string|null;teaching_since_year:number|null
+  school_description:string|null;program_summary:string|null;teachers_summary:string|null;direction_experience_summary:string|null;languages:string|null
+  has_cover:boolean;cover_version:string|null
+}
+
+export async function getPublicDirectoryMember(id:string){
+  const rows=await query<PublicDirectoryDetail>(`SELECT m.id,m.member_type,
+    COALESCE(sc.school_name,NULLIF(p.public_name,''),p.first_name||' '||p.last_name) name,
+    p.public_email,p.public_phone,p.public_address,p.public_postal_code,p.public_city,p.public_province,p.website,p.bio,
+    p.facebook_url,p.instagram_url,p.youtube_url,p.twitter_url,
+    (ph.membership_id IS NOT NULL) has_photo,EXTRACT(EPOCH FROM ph.updated_at)::bigint::text photo_version,
+    pr.training_school,CASE WHEN pr.qualification_summary ~* '\\.(pdf|jpe?g|png)$' THEN NULL ELSE pr.qualification_summary END qualification_summary,
+    pr.teaching_level,pr.teaching_schools,pr.teaching_since_year,
+    sc.description school_description,sc.program_summary,sc.teachers_summary,sc.direction_experience_summary,sc.center_type,sc.languages,
+    (ci.membership_id IS NOT NULL) has_cover,EXTRACT(EPOCH FROM ci.updated_at)::bigint::text cover_version
+    FROM memberships m JOIN member_profiles p ON p.membership_id=m.id
+    LEFT JOIN professional_profiles pr ON pr.membership_id=m.id LEFT JOIN school_profiles sc ON sc.membership_id=m.id
+    LEFT JOIN membership_profile_photos ph ON ph.membership_id=m.id LEFT JOIN membership_cover_images ci ON ci.membership_id=m.id
+    WHERE m.id=$1 AND m.status='active' AND m.directory_opt_in=true AND m.member_type IN ('professional','school') LIMIT 1`,[id])
+  return rows[0]??null
 }
 
 export async function getAdminStats() {

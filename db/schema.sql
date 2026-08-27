@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS professional_profiles (
 CREATE TABLE IF NOT EXISTS school_profiles (
   membership_id UUID PRIMARY KEY REFERENCES memberships(id) ON DELETE CASCADE,
   responsible_professional_membership_id UUID UNIQUE REFERENCES memberships(id) ON DELETE RESTRICT,
-  school_name TEXT NOT NULL, description TEXT, program_summary TEXT, teachers_summary TEXT, direction_experience_summary TEXT
+  school_name TEXT NOT NULL, description TEXT, program_summary TEXT, teachers_summary TEXT, direction_experience_summary TEXT,
+  center_type TEXT, languages TEXT
 );
 CREATE TABLE IF NOT EXISTS membership_documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(), membership_id UUID NOT NULL REFERENCES memberships(id) ON DELETE CASCADE,
@@ -57,6 +58,16 @@ CREATE TABLE IF NOT EXISTS membership_documents (
   reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL, reviewed_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS membership_profile_photos (
+  membership_id UUID PRIMARY KEY REFERENCES memberships(id) ON DELETE CASCADE,
+  original_name TEXT NOT NULL,
+  mime_type TEXT NOT NULL CHECK (mime_type IN ('image/jpeg','image/png','image/webp','image/gif')),
+  size_bytes INTEGER NOT NULL CHECK (size_bytes > 0 AND size_bytes <= 5242880),
+  content BYTEA NOT NULL,
+  source TEXT NOT NULL DEFAULT 'member_upload' CHECK (source IN ('wordpress','member_upload')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (octet_length(content) = size_bytes)
+);
+CREATE TABLE IF NOT EXISTS membership_cover_images (
   membership_id UUID PRIMARY KEY REFERENCES memberships(id) ON DELETE CASCADE,
   original_name TEXT NOT NULL,
   mime_type TEXT NOT NULL CHECK (mime_type IN ('image/jpeg','image/png','image/webp','image/gif')),

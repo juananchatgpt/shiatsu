@@ -3,6 +3,7 @@ import { MEMBER_STATUSES, MEMBER_TYPES } from './domain'
 
 const optionalText = z.string().trim().max(500).optional().or(z.literal(''))
 const optionalUrl = z.string().trim().url('URL no válida').optional().or(z.literal(''))
+const optionalSocial = z.string().trim().max(500).optional().or(z.literal(''))
 
 export const registrationSchema = z.object({
   memberType: z.enum(MEMBER_TYPES),
@@ -55,12 +56,13 @@ export const profileSchema = z.object({
   publicEmail: z.string().trim().email().optional().or(z.literal('')), publicPhone: optionalText,
   publicAddress: optionalText, publicPostalCode: optionalText, publicCity: optionalText,
   publicProvince: optionalText, website: optionalUrl, bio: z.string().trim().max(2500).optional().or(z.literal('')),
-  facebookUrl: optionalUrl, instagramUrl: optionalUrl, youtubeUrl: optionalUrl, twitterUrl: optionalUrl,
+  facebookUrl: optionalSocial, instagramUrl: optionalSocial, youtubeUrl: optionalSocial, twitterUrl: optionalSocial,
   insuranceSelected: z.boolean(), schoolOrigin: optionalText, trainingSchool: optionalText,
   qualificationSummary: z.string().trim().max(2500).optional().or(z.literal('')),
   teachingLevel: optionalText, teachingSchools: z.string().trim().max(2500).optional().or(z.literal('')),
   teachingSinceYear: z.union([z.literal(''), z.coerce.number().int().min(1900).max(2100)]).optional(),
   schoolName: optionalText, schoolDescription: z.string().trim().max(2500).optional().or(z.literal('')),
+  centerType: optionalText, languages: optionalText,
   programSummary: z.string().trim().max(5000).optional().or(z.literal('')),
   teachersSummary: z.string().trim().max(5000).optional().or(z.literal('')),
   directionExperienceSummary: z.string().trim().max(5000).optional().or(z.literal('')),
@@ -77,4 +79,10 @@ export const eventSchema = z.object({
 
 export const membershipStatusSchema = z.object({
   membershipId: z.string().uuid(), status: z.enum(MEMBER_STATUSES), reason: z.string().trim().max(1000).optional(),
+})
+
+export const adminMemberProfileSchema = profileSchema.extend({
+  membershipId:z.string().uuid(),memberNumber:z.string().trim().max(50).optional().or(z.literal('')),
+  anniversaryDate:z.string().date().optional().or(z.literal('')),internalNotes:z.string().trim().max(5000).optional().or(z.literal('')),
+  responsibleMemberNumber:optionalText,
 })

@@ -4,6 +4,10 @@
 > **Date**: 2026-08-26
 > **Project**: 21. Shiatsu — APSE
 
+> **Update 2026-08-27**: el directorio ya usa tarjetas-resumen y fichas individuales; se añadieron
+> portadas, tipo de centro e idiomas para escuelas, y la administración permite editar el perfil
+> completo y sus imágenes. Migración `005` aplicada y validada sin envíos de correo.
+
 ---
 
 ## Objective

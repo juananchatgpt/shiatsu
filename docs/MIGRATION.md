@@ -64,3 +64,16 @@ históricas en las notas internas. IBAN y contraseñas se excluyen.
 - Resultado total: 404 socios; 180 activos y 224 inactivos.
 - La simulación posterior devolvió cero incorporaciones. No se envió ningún correo.
 - Instantánea previa: `backup_pre_directory_import_20260826`.
+
+## Portadas y campos públicos de escuelas
+
+- Migración SQL: `005_public_profiles_and_covers.sql`.
+- Añade `center_type` e `languages` a `school_profiles` y portadas binarias en
+  `membership_cover_images`.
+- La ejecución del 26-08-2026 importó 8 portadas mediante `npm run wp:import-covers`, sin enviar
+  correos. Cinco son públicas porque pertenecen a escuelas activas con consentimiento de directorio.
+- Se recuperaron 12 emails públicos de escuelas desde el origen histórico y se limpiaron valores de
+  relleno en descripción, biografía y resumen de docentes.
+- Instantánea previa: `backup_pre_profile_design_20260826`.
+- La API de listado público devuelve solo datos de resumen. El contacto y contenido ampliado se
+  sirven en la ficha individual y únicamente para profesionales/escuelas activos con consentimiento.

@@ -94,6 +94,7 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
     insuranceSelected:checked(form,'insuranceSelected'),schoolOrigin:text(form,'schoolOrigin'),trainingSchool:text(form,'trainingSchool'),
     qualificationSummary:text(form,'qualificationSummary'),teachingLevel:text(form,'teachingLevel'),teachingSchools:text(form,'teachingSchools'),
     teachingSinceYear:text(form,'teachingSinceYear'),schoolName:text(form,'schoolName'),schoolDescription:text(form,'schoolDescription'),
+    centerType:text(form,'centerType'),languages:text(form,'languages'),
     programSummary:text(form,'programSummary'),teachersSummary:text(form,'teachersSummary'),directionExperienceSummary:text(form,'directionExperienceSummary'),
   })
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
@@ -119,7 +120,7 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
       if(m.member_type==='professional')await tx(`UPDATE professional_profiles SET training_school=$1,qualification_summary=$2,
         teaching_level=$3,teaching_schools=$4,teaching_since_year=$5 WHERE membership_id=$6`,[d.trainingSchool||null,
         d.qualificationSummary||null,d.teachingLevel||null,d.teachingSchools||null,d.teachingSinceYear||null,m.id])
-      if(m.member_type==='school')await tx(`UPDATE school_profiles SET school_name=$1,description=$2,program_summary=$3,teachers_summary=$4,direction_experience_summary=$5 WHERE membership_id=$6`,[d.schoolName||'Escuela',d.schoolDescription||null,d.programSummary||null,d.teachersSummary||null,d.directionExperienceSummary||null,m.id])
+      if(m.member_type==='school')await tx(`UPDATE school_profiles SET school_name=$1,description=$2,program_summary=$3,teachers_summary=$4,direction_experience_summary=$5,center_type=$6,languages=$7 WHERE membership_id=$8`,[d.schoolName||'Escuela',d.schoolDescription||null,d.programSummary||null,d.teachersSummary||null,d.directionExperienceSummary||null,d.centerType||null,d.languages||null,m.id])
       await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'membership.profile_updated','membership',$2)`,[user.id,m.id])
     })
     return { ok:true }

@@ -17,6 +17,7 @@
     "wp:inspect": "tsx scripts/import-wordpress-users.ts --dry-run",
     "wp:import": "tsx scripts/import-wordpress-users.ts --apply",
     "wp:import-photos": "tsx scripts/import-profile-photos.ts",
+    "wp:import-covers": "tsx scripts/import-school-covers.ts",
     "directory:inspect": "tsx scripts/import-directory-users.ts",
     "directory:import": "tsx scripts/import-directory-users.ts --apply",
     "test": "node --import tsx --test tests/*.test.ts"
