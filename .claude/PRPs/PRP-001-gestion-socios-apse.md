@@ -68,10 +68,10 @@ sistema, reducir duplicidades y publicar directorio y eventos en la nueva web co
 
 - Alumno: **40 € anuales**.
 - Profesional: **95 € anuales**.
-- Seguro opcional para profesional: **+20 € anuales**.
+- Seguro para profesional: casilla de interés, sin precio asociado en la fase 1.
 - Escuela: **95 € anuales provisionalmente**, pendiente de revisión antes de activar pagos.
-- Seguro opcional para escuela: **+20 € anuales**.
-- El seguro es un check en el alta; no es una póliza ni un flujo documental separado.
+- Seguro para escuela: casilla de interés, sin precio asociado en la fase 1.
+- El seguro es un check en el alta; no incrementa la cuota y no es una póliza ni un flujo documental separado.
 - Cada alta tendrá su propia fecha de aniversario.
 - La fase 1 no controla pagos, impagos ni renovaciones y no integra GoCardless.
 
@@ -95,10 +95,10 @@ sistema, reducir duplicidades y publicar directorio y eventos en la nueva web co
 - **Alumno**: nombre, apellidos, escuela de procedencia, DNI/NIE, teléfono, correo, contraseña,
   aceptación de privacidad.
 - **Profesional**: nombre, apellidos, DNI/NIE, teléfono, correo, contraseña, titulación/documento,
-  seguro opcional, consentimiento de directorio y datos públicos del perfil.
+  interés en seguro, consentimiento de directorio y datos públicos del perfil.
 - **Escuela**: profesional responsable, nombre, DNI/NIE del responsable, teléfono, correo,
   contraseña, programa formativo, relación de profesionales/docentes, acreditación de dirección,
-  seguro opcional, consentimiento de directorio y datos públicos del perfil.
+  interés en seguro, consentimiento de directorio y datos públicos del perfil.
 - Las reglas definitivas de formatos, tamaños y conservación documental se fijarán antes de
   implementar la subida de archivos. Como referencia, el sistema antiguo admitía PDF para la
   titulación profesional y ZIP/RAR de hasta 5 MB para la documentación de escuela.

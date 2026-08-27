@@ -2,7 +2,7 @@
 
 import { hashPassword, verifyPassword } from '@/lib/auth'
 import { withTransaction } from '@/lib/db'
-import { FEES_CENTS, INSURANCE_FEE_CENTS, type MemberType } from '@/lib/domain'
+import { FEES_CENTS, type MemberType } from '@/lib/domain'
 import { registrationSchema, profileSchema } from '@/lib/validation'
 import { requireUser } from '@/lib/access'
 import { checkPublicRateLimit } from '@/lib/rate-limit'
@@ -51,7 +51,7 @@ export async function registerMember(_prev: ActionState | null, form: FormData):
       const memberships = await tx<{ id: string }>(
         `INSERT INTO memberships (user_id,member_type,status,insurance_selected,base_fee_cents,insurance_fee_cents,directory_opt_in,privacy_accepted_at)
          VALUES ($1,$2,'pending',$3,$4,$5,$6,now()) RETURNING id`,
-        [users[0].id, data.memberType, insuranceAllowed, FEES_CENTS[data.memberType], insuranceAllowed ? INSURANCE_FEE_CENTS : 0,
+        [users[0].id, data.memberType, insuranceAllowed, FEES_CENTS[data.memberType], 0,
           data.memberType !== 'student' && data.directoryOptIn],
       )
       const membershipId = memberships[0].id
@@ -107,7 +107,7 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
       if(d.email!==m.email&&(!d.currentPassword||!await verifyPassword(d.currentPassword,m.password_hash)))throw new Error('REAUTH_REQUIRED')
       await tx('UPDATE users SET email=$1,full_name=$2,updated_at=now() WHERE id=$3',[d.email,`${d.firstName} ${d.lastName}`.trim(),user.id])
       const insured=m.member_type!=='student'&&d.insuranceSelected
-      await tx(`UPDATE memberships SET directory_opt_in=$1,insurance_selected=$2,insurance_fee_cents=$3,updated_at=now() WHERE id=$4`,[m.member_type !== 'student' && d.directoryOptIn,insured,insured?INSURANCE_FEE_CENTS:0,m.id])
+      await tx(`UPDATE memberships SET directory_opt_in=$1,insurance_selected=$2,insurance_fee_cents=0,updated_at=now() WHERE id=$3`,[m.member_type !== 'student' && d.directoryOptIn,insured,m.id])
       await tx(`UPDATE member_profiles SET first_name=$1,last_name=$2,identity_document=$3,phone=$4,secondary_phone=$5,address=$6,
         postal_code=$7,city=$8,province=$9,public_name=$10,public_email=$11,public_phone=$12,public_address=$13,
         public_postal_code=$14,public_city=$15,public_province=$16,website=$17,bio=$18,facebook_url=$19,

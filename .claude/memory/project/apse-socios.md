@@ -74,7 +74,8 @@
 ## Decisiones
 
 - Auth propia + Postgres directo + SMTP + Easypanel.
-- Cuotas informativas: alumno 40 €, profesional/escuela 95 €, seguro opcional +20 €.
+- Cuotas informativas: alumno 40 € y profesional/escuela 95 €. El seguro es solo una casilla de
+  interés y no tiene precio asociado ni incrementa la cuota en fase 1.
 - La cuota de escuela de 95 € queda confirmada para esta fase.
 - Los documentos privados se almacenan dentro de PostgreSQL como `BYTEA`, con acceso exclusivo del
   propietario/administrador, límite de 5 MB y descarga `no-store`; entran en el backup de PostgreSQL.

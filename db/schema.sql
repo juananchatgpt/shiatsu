@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS request_rate_limits (
   key TEXT PRIMARY KEY, count INTEGER NOT NULL DEFAULT 1, expires_at TIMESTAMPTZ NOT NULL
 );
 INSERT INTO app_settings (key, value) VALUES
-  ('fees', '{"student":4000,"professional":9500,"school":9500,"insurance":2000}'::jsonb),
+  ('fees', '{"student":4000,"professional":9500,"school":9500,"insurance":0}'::jsonb),
   ('communications', '{"bulkSendingEnabled":false}'::jsonb)
 ON CONFLICT (key) DO NOTHING;
 

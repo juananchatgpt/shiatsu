@@ -6,7 +6,7 @@ import { requireAdmin } from '@/lib/access'
 import { query, withTransaction } from '@/lib/db'
 import { adminDeleteMemberSchema,adminManualMemberSchema,adminMemberProfileSchema,membershipStatusSchema } from '@/lib/validation'
 import { hashPassword } from '@/lib/auth'
-import { FEES_CENTS,INSURANCE_FEE_CENTS } from '@/lib/domain'
+import { FEES_CENTS } from '@/lib/domain'
 
 const UUID_PATTERN=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -106,7 +106,7 @@ export async function adminCreateMember(_prev:{ok?:boolean;error?:string;members
     const insured=d.memberType!=='student'&&d.insuranceSelected
     const memberships=await tx<{id:string}>(`INSERT INTO memberships(user_id,member_number,member_type,status,insurance_selected,base_fee_cents,insurance_fee_cents,anniversary_date,directory_opt_in,privacy_accepted_at,approved_by,approved_at)
       VALUES($1,COALESCE(NULLIF($2,''),CASE WHEN $3='active' THEN nextval('member_number_seq')::text END),$4,$3,$5,$6,$7,NULLIF($8,'')::date,$9,now(),CASE WHEN $3='active' THEN $10 END,CASE WHEN $3='active' THEN now() END) RETURNING id`,
-      [users[0].id,d.memberNumber||'',d.status,d.memberType,insured,FEES_CENTS[d.memberType],insured?INSURANCE_FEE_CENTS:0,d.anniversaryDate||'',d.memberType!=='student'&&d.directoryOptIn,admin.id]);membershipId=memberships[0].id
+      [users[0].id,d.memberNumber||'',d.status,d.memberType,insured,FEES_CENTS[d.memberType],0,d.anniversaryDate||'',d.memberType!=='student'&&d.directoryOptIn,admin.id]);membershipId=memberships[0].id
     await tx(`INSERT INTO member_profiles(membership_id,first_name,last_name,identity_document,phone,city,province,public_name,public_email,public_phone,public_city,public_province,website,bio)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,[membershipId,d.firstName,d.lastName,d.identityDocument||null,d.phone||null,d.city||null,d.province||null,d.publicName||null,d.publicEmail||null,d.publicPhone||null,d.publicCity||null,d.publicProvince||null,d.website||null,d.bio||null])
     if(d.memberType==='student')await tx('INSERT INTO student_profiles(membership_id,school_origin) VALUES($1,$2)',[membershipId,d.schoolOrigin||'Sin especificar'])
@@ -142,7 +142,7 @@ export async function adminUpdateMemberProfile(_prev:{ok?:boolean;error?:string}
     const insured=member.member_type!=='student'&&d.insuranceSelected
     await tx(`UPDATE memberships SET member_number=$1,anniversary_date=NULLIF($2,'')::date,internal_notes=$3,directory_opt_in=$4,
       insurance_selected=$5,insurance_fee_cents=$6,updated_at=now() WHERE id=$7`,[d.memberNumber||null,d.anniversaryDate||'',d.internalNotes||null,
-      member.member_type!=='student'&&d.directoryOptIn,insured,insured?INSURANCE_FEE_CENTS:0,d.membershipId])
+      member.member_type!=='student'&&d.directoryOptIn,insured,0,d.membershipId])
     await tx(`UPDATE member_profiles SET first_name=$1,last_name=$2,identity_document=$3,phone=$4,secondary_phone=$5,address=$6,postal_code=$7,city=$8,province=$9,
       public_name=$10,public_email=$11,public_phone=$12,public_address=$13,public_postal_code=$14,public_city=$15,public_province=$16,website=$17,bio=$18,
       facebook_url=$19,instagram_url=$20,youtube_url=$21,twitter_url=$22,updated_at=now() WHERE membership_id=$23`,[d.firstName,d.lastName,d.identityDocument||null,d.phone||null,
