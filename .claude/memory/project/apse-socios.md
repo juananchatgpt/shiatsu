@@ -59,6 +59,8 @@
 - Cada evento tiene una ficha administrativa completa. Desde ella se revisan y editan organizador,
   contenido, imagen, fechas, modalidad, ubicación, contacto, inscripción, precio, destacado, notas y
   estado; seleccionar `Aprobado` lo publica. Al volver se conserva el filtro del listado.
+- El listado público y el widget de eventos muestran la imagen configurada en cada evento en formato
+  panorámico y adaptable; si no hay imagen, la tarjeta mantiene el diseño sin reservar hueco.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.
