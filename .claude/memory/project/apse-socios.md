@@ -54,6 +54,8 @@
   elimina por cascada cuenta, sesiones, perfil, documentos, imágenes, eventos y entregas preparadas,
   y deja auditoría. Un profesional con una escuela vinculada no se puede borrar hasta reasignarla o
   eliminarla; para conservar historial se recomienda usar `Inactivo`.
+- Los formularios de eventos muestran en español las validaciones de título, descripción y fechas;
+  la descripción indica y exige en el navegador un mínimo de 20 caracteres.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.

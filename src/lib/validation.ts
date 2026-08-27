@@ -69,13 +69,15 @@ export const profileSchema = z.object({
 })
 
 export const eventSchema = z.object({
-  title: z.string().trim().min(4).max(180), description: z.string().trim().min(20).max(10000),
-  startsAt: z.string().datetime({ local: true }), endsAt: z.string().datetime({ local: true }),
+  title: z.string().trim().min(4, 'El título debe tener al menos 4 caracteres').max(180, 'El título no puede superar los 180 caracteres'),
+  description: z.string().trim().min(20, 'La descripción debe tener al menos 20 caracteres').max(10000, 'La descripción es demasiado larga'),
+  startsAt: z.string().datetime({ local: true, message: 'Indica una fecha y hora de inicio válidas' }),
+  endsAt: z.string().datetime({ local: true, message: 'Indica una fecha y hora de fin válidas' }),
   allDay: z.boolean(), modality: z.enum(['in_person', 'online', 'hybrid']), venueName: optionalText,
   address: optionalText, city: optionalText, province: optionalText, postalCode: optionalText,
   registrationUrl: optionalUrl, publicContact: optionalText, isFree: z.boolean(),
   priceEuros: z.coerce.number().min(0).max(100000).optional(), imageUrl: optionalUrl,
-}).refine((data) => new Date(data.endsAt) >= new Date(data.startsAt), { path: ['endsAt'], message: 'La fecha final debe ser posterior' })
+}).refine((data) => new Date(data.endsAt) >= new Date(data.startsAt), { path: ['endsAt'], message: 'La fecha final debe ser posterior a la fecha de inicio' })
 
 export const membershipStatusSchema = z.object({
   membershipId: z.string().uuid(), status: z.enum(MEMBER_STATUSES), reason: z.string().trim().max(1000).optional(),

@@ -23,6 +23,12 @@ test('un evento no puede terminar antes de comenzar',()=>{
   assert.equal(result.success,false)
 })
 
+test('la descripción corta del evento devuelve un mensaje claro en español',()=>{
+  const result=eventSchema.safeParse({title:'Curso de Shiatsu',description:'Muy breve',startsAt:'2026-09-20T17:00',endsAt:'2026-09-20T18:00',allDay:false,modality:'in_person',isFree:true})
+  assert.equal(result.success,false)
+  if(!result.success)assert.equal(result.error.issues[0]?.message,'La descripción debe tener al menos 20 caracteres')
+})
+
 test('el administrador debe repetir correctamente la nueva contraseña',()=>{
   const result=adminMemberProfileSchema.safeParse({membershipId:'67dbc9f8-bf06-4b5c-9396-297dd74d571a',email:'socio@example.com',firstName:'Socio',lastName:'APSE',directoryOptIn:false,insuranceSelected:false,newPassword:'segura123',confirmPassword:'distinta123'})
   assert.equal(result.success,false)
