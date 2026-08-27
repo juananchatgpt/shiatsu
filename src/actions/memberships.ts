@@ -56,11 +56,11 @@ export async function registerMember(_prev: ActionState | null, form: FormData):
       )
       const membershipId = memberships[0].id
       await tx(
-        `INSERT INTO member_profiles (membership_id,first_name,last_name,identity_document,phone,public_name,public_email,public_phone,public_city,public_province,website,bio)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-        [membershipId, data.firstName, data.lastName, data.identityDocument, data.phone, data.publicName || null,
-          data.publicEmail || null, data.publicPhone || null, data.publicCity || null, data.publicProvince || null,
-          data.website || null, data.bio || null],
+        `INSERT INTO member_profiles (membership_id,first_name,last_name,identity_document,phone,city,province,public_name,public_email,public_phone,public_city,public_province,website,bio)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        [membershipId, data.firstName, data.lastName, data.identityDocument, data.phone, data.publicCity || null,
+          data.publicProvince || null, data.publicName || null, data.publicEmail || null, data.publicPhone || null,
+          data.publicCity || null, data.publicProvince || null, data.website || null, data.bio || null],
       )
       if (data.memberType === 'student') await tx('INSERT INTO student_profiles (membership_id,school_origin) VALUES ($1,$2)', [membershipId, data.schoolOrigin])
       if (data.memberType === 'professional') await tx('INSERT INTO professional_profiles (membership_id,training_school,qualification_summary) VALUES ($1,$2,$3)', [membershipId,data.trainingSchool,data.qualificationSummary])

@@ -19,7 +19,7 @@ export async function updateMembershipStatus(form:FormData) {
       approved_by=CASE WHEN $1='active' THEN $3 ELSE approved_by END,
       approved_at=CASE WHEN $1='active' THEN COALESCE(approved_at,now()) ELSE approved_at END,
       anniversary_date=CASE WHEN $1='active' THEN COALESCE(anniversary_date,CURRENT_DATE) ELSE anniversary_date END,
-      member_number=CASE WHEN $1='active' AND member_number IS NULL THEN 'APSE-'||LPAD(nextval('member_number_seq')::text,5,'0') ELSE member_number END,
+      member_number=CASE WHEN $1='active' AND member_number IS NULL THEN nextval('member_number_seq')::text ELSE member_number END,
       updated_at=now() WHERE id=$4 RETURNING member_number`,[status,reason||null,admin.id,membershipId])
     if(!rows[0]) throw new Error('MEMBERSHIP_NOT_FOUND')
     await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.status_changed','membership',$2,$3::jsonb)`,[admin.id,membershipId,JSON.stringify({status,reason:reason||null})])
@@ -86,7 +86,7 @@ export async function adminCreateMember(_prev:{ok?:boolean;error?:string;members
     const users=await tx<{id:string}>(`INSERT INTO users(email,password_hash,full_name,role,email_verified_at) VALUES($1,$2,$3,'member',now()) RETURNING id`,[d.email,await hashPassword(d.password),`${d.firstName} ${d.lastName}`.trim()])
     const insured=d.memberType!=='student'&&d.insuranceSelected
     const memberships=await tx<{id:string}>(`INSERT INTO memberships(user_id,member_number,member_type,status,insurance_selected,base_fee_cents,insurance_fee_cents,anniversary_date,directory_opt_in,privacy_accepted_at,approved_by,approved_at)
-      VALUES($1,COALESCE(NULLIF($2,''),CASE WHEN $3='active' THEN 'APSE-'||LPAD(nextval('member_number_seq')::text,5,'0') END),$4,$3,$5,$6,$7,NULLIF($8,'')::date,$9,now(),CASE WHEN $3='active' THEN $10 END,CASE WHEN $3='active' THEN now() END) RETURNING id`,
+      VALUES($1,COALESCE(NULLIF($2,''),CASE WHEN $3='active' THEN nextval('member_number_seq')::text END),$4,$3,$5,$6,$7,NULLIF($8,'')::date,$9,now(),CASE WHEN $3='active' THEN $10 END,CASE WHEN $3='active' THEN now() END) RETURNING id`,
       [users[0].id,d.memberNumber||'',d.status,d.memberType,insured,FEES_CENTS[d.memberType],insured?INSURANCE_FEE_CENTS:0,d.anniversaryDate||'',d.memberType!=='student'&&d.directoryOptIn,admin.id]);membershipId=memberships[0].id
     await tx(`INSERT INTO member_profiles(membership_id,first_name,last_name,identity_document,phone,city,province,public_name,public_email,public_phone,public_city,public_province,website,bio)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,[membershipId,d.firstName,d.lastName,d.identityDocument||null,d.phone||null,d.city||null,d.province||null,d.publicName||null,d.publicEmail||null,d.publicPhone||null,d.publicCity||null,d.publicProvince||null,d.website||null,d.bio||null])

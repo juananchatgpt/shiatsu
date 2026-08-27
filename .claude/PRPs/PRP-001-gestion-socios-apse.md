@@ -15,6 +15,10 @@
 > **Update 2026-08-27 · navegación**: el listado de socios separa actuales, inactivos y todos, y
 > conserva filtros y pestaña al volver desde una ficha. El directorio ofrece únicamente provincias
 > que tienen perfiles publicables y adapta las opciones al tipo de socio seleccionado.
+>
+> **Update 2026-08-27 · altas**: la numeración automática continúa la serie histórica numérica, la
+> ubicación del alta se guarda en los datos privados y públicos, y las fichas activas normalizan la
+> fecha de renovación para evitar errores de renderizado.
 
 ---
 

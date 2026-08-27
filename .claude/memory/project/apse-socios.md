@@ -45,6 +45,11 @@
   La búsqueda, tipo, estado y pestaña se conservan al abrir una ficha y volver al listado.
 - El selector de provincias del directorio se alimenta solo de perfiles activos, visibles y con
   provincia; al elegir profesionales o escuelas se recalcula para ese tipo.
+- Corregido el primer alta posterior a la importación: la numeración continúa la serie histórica
+  solo numérica desde 934 y la secuencia queda sincronizada con el máximo existente.
+- Las ubicaciones indicadas en el alta se conservan tanto en la parte privada como en la ficha
+  pública. Las fechas de renovación se convierten a texto en la consulta para evitar errores 500
+  al abrir una ficha recién activada.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.

@@ -22,7 +22,7 @@ export interface MembershipDetail {
 
 const DETAIL_SELECT = `
   SELECT m.id, m.user_id, u.email, u.full_name, m.member_number, m.member_type, m.status,
-    m.insurance_selected, m.base_fee_cents, m.insurance_fee_cents, m.anniversary_date,
+    m.insurance_selected, m.base_fee_cents, m.insurance_fee_cents, m.anniversary_date::text AS anniversary_date,
     m.directory_opt_in, m.rejection_reason, p.first_name, p.last_name, p.identity_document,
     p.phone, p.secondary_phone, p.address, p.postal_code, p.city, p.province,
     p.public_name, p.public_email, p.public_phone, p.public_address, p.public_postal_code,
