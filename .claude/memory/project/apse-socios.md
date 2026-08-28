@@ -76,6 +76,8 @@
 - Corregido el error PostgreSQL `42804` del alta administrativa: los UUID de `reviewed_by` dentro de
   expresiones condicionales se convierten explícitamente a `uuid` tanto al crear como al editar. Se
   probaron en una transacción con rollback los estados borrador, pendiente, aprobado y rechazado.
+- Juanan confirmó el 2026-08-28 que la creación de eventos desde Administración ya funciona en
+  producción tras desplegar el commit `0810a06`.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.
@@ -90,6 +92,8 @@
 - Preparado el borrador de presentación al cliente con el alcance de fase 1, validaciones, migración,
   pendientes y enlaces de revisión. Está guardado en
   `../reference/correo-cliente-estado-fase-1-2026-08-28.md` y no se ha enviado.
+- Juanan enviará personalmente el correo de presentación al cliente y avisará después. La aplicación
+  y el agente no deben enviarlo ni iniciar comunicaciones por su cuenta.
 
 ## Pendiente del cliente/infraestructura
 
