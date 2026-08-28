@@ -1,6 +1,6 @@
 # APSE · Gestión de socios
 
-## Estado 2026-08-27
+## Estado 2026-08-28
 
 - Aplicación fase 1 construida desde SaaS Factory Postgres.
 - PRP activo: `../../PRPs/PRP-001-gestion-socios-apse.md`.
@@ -22,6 +22,8 @@
   de prueba/técnicas, 1 administrador técnico y Barry Davidson (#119), que carece de email.
 - Recuento tras el segundo import: 404 socios; 180 activos y 224 inactivos; 138 alumnos, 254
   profesionales y 12 escuelas. Hay 386 números conservados y 18 perfiles sin número.
+- Recuento real consultado el 2026-08-28: 405 socios; 181 activos y 224 inactivos; 138 alumnos, 255
+  profesionales y 12 escuelas. El aumento respecto al import corresponde a un alta posterior.
 - Migración `004` aplicada: Twitter/X (3), nivel docente (9), escuelas donde imparte (7), año de
   inicio docente (8) y observaciones a notas internas (149). Snapshot:
   `backup_pre_directory_import_20260826`.
@@ -72,6 +74,9 @@
   el build. Si el panel no está autenticado, se puede construir una imagen desde `git archive` por
   SSH y actualizar únicamente la imagen del servicio, conservando su configuración y verificando
   después la web y `/api/health`.
+- Preparado el borrador de presentación al cliente con el alcance de fase 1, validaciones, migración,
+  pendientes y enlaces de revisión. Está guardado en
+  `../reference/correo-cliente-estado-fase-1-2026-08-28.md` y no se ha enviado.
 
 ## Pendiente del cliente/infraestructura
 

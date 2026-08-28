@@ -14,3 +14,4 @@
 
 ## reference/ — Donde encontrar cosas
 - El export WordPress privado está en la raíz y se inspecciona con `npm run wp:inspect`; nunca se versiona.
+- [Correo de estado de fase 1](reference/correo-cliente-estado-fase-1-2026-08-28.md) — borrador sencillo para presentar al cliente lo construido, las validaciones y los siguientes pasos; no enviado.
