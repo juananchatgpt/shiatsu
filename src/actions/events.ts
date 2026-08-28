@@ -42,7 +42,7 @@ export async function adminCreateEvent(_prev:ActionState|null,form:FormData):Pro
   try{await withTransaction(async tx=>{
     const organizers=await tx<{id:string}>(`SELECT id FROM memberships WHERE id=$1 AND status='active' AND member_type IN ('professional','school') LIMIT 1`,[organizerId]);if(!organizers[0])throw new Error('ORGANIZER_NOT_FOUND')
     const rows=await tx<{id:string}>(`INSERT INTO events(organizer_membership_id,title,description,image_url,starts_at,ends_at,all_day,modality,venue_name,address,city,province,postal_code,registration_url,public_contact,is_free,price_cents,status,submitted_at,reviewed_by,reviewed_at)
-      VALUES($1,$2,$3,$4,$5::timestamp AT TIME ZONE 'Europe/Madrid',$6::timestamp AT TIME ZONE 'Europe/Madrid',$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,CASE WHEN $18='draft' THEN NULL ELSE now() END,CASE WHEN $18='approved' THEN $19 END,CASE WHEN $18='approved' THEN now() END) RETURNING id`,
+      VALUES($1,$2,$3,$4,$5::timestamp AT TIME ZONE 'Europe/Madrid',$6::timestamp AT TIME ZONE 'Europe/Madrid',$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,CASE WHEN $18='draft' THEN NULL ELSE now() END,CASE WHEN $18='approved' THEN $19::uuid ELSE NULL::uuid END,CASE WHEN $18='approved' THEN now() END) RETURNING id`,
       [organizerId,d.title,d.description,d.imageUrl||null,d.startsAt,d.endsAt,d.allDay,d.modality,d.venueName||null,d.address||null,d.city||null,d.province||null,d.postalCode||null,d.registrationUrl||null,d.publicContact||null,d.isFree,d.isFree?null:Math.round((d.priceEuros??0)*100),status,admin.id])
     await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'event.created_by_admin','event',$2,$3::jsonb)`,[admin.id,rows[0].id,JSON.stringify({status,organizerId})])
   });revalidatePath('/admin/eventos');revalidatePath('/eventos');revalidatePath('/embed/eventos');return{ok:true}}
@@ -90,7 +90,7 @@ export async function adminUpdateEvent(_prev:ActionState|null,form:FormData):Pro
         modality=$8,venue_name=$9,address=$10,city=$11,province=$12,postal_code=$13,registration_url=$14,
         public_contact=$15,is_free=$16,price_cents=$17,status=$18,moderation_notes=$19,featured=$20,
         submitted_at=CASE WHEN $18 IN ('pending_review','approved') THEN COALESCE(submitted_at,now()) ELSE submitted_at END,
-        reviewed_by=CASE WHEN $18 IN ('approved','rejected','cancelled') THEN $21 ELSE NULL END,
+        reviewed_by=CASE WHEN $18 IN ('approved','rejected','cancelled') THEN $21::uuid ELSE NULL::uuid END,
         reviewed_at=CASE WHEN $18 IN ('approved','rejected','cancelled') THEN now() ELSE NULL END,updated_at=now()
         WHERE id=$22`,[d.organizerMembershipId,d.title,d.description,d.imageUrl||null,d.startsAt,d.endsAt,d.allDay,d.modality,
         d.venueName||null,d.address||null,d.city||null,d.province||null,d.postalCode||null,d.registrationUrl||null,

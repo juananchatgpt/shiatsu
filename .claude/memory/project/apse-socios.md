@@ -73,6 +73,9 @@
 - El alta administrativa de eventos exige asignar un profesional o escuela activo. El formulario lo
   explica y valida el organizador antes de consultar PostgreSQL, mostrando un error claro si falta o
   dejó de estar activo; el resto de validaciones también se devuelve en español dentro del formulario.
+- Corregido el error PostgreSQL `42804` del alta administrativa: los UUID de `reviewed_by` dentro de
+  expresiones condicionales se convierten explícitamente a `uuid` tanto al crear como al editar. Se
+  probaron en una transacción con rollback los estados borrador, pendiente, aprobado y rechazado.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.
