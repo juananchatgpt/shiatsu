@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin, requireUser, getMembershipContext, canCreateEvents } from '@/lib/access'
 import { withTransaction } from '@/lib/db'
 import { EVENT_STATUSES } from '@/lib/domain'
-import { adminEventUpdateSchema, eventSchema } from '@/lib/validation'
+import { adminEventCreateSchema, adminEventUpdateSchema, eventSchema } from '@/lib/validation'
 import type { ActionState } from './memberships'
 
 const checked=(f:FormData,n:string)=>f.get(n)==='on'
@@ -33,13 +33,12 @@ export async function createEvent(_prev:ActionState|null, form:FormData):Promise
 }
 
 export async function adminCreateEvent(_prev:ActionState|null,form:FormData):Promise<ActionState>{
-  const admin=await requireAdmin();const organizerId=text(form,'organizerMembershipId');const status=text(form,'status')
-  if(!['draft','pending_review','approved'].includes(status))return{error:'Estado no válido'}
-  const parsed=eventSchema.safeParse({title:text(form,'title'),description:text(form,'description'),startsAt:text(form,'startsAt'),endsAt:text(form,'endsAt'),
+  const admin=await requireAdmin()
+  const parsed=adminEventCreateSchema.safeParse({organizerMembershipId:text(form,'organizerMembershipId'),status:text(form,'status'),title:text(form,'title'),description:text(form,'description'),startsAt:text(form,'startsAt'),endsAt:text(form,'endsAt'),
     allDay:checked(form,'allDay'),modality:text(form,'modality'),venueName:text(form,'venueName'),address:text(form,'address'),city:text(form,'city'),
     province:text(form,'province'),postalCode:text(form,'postalCode'),registrationUrl:text(form,'registrationUrl'),publicContact:text(form,'publicContact'),
     isFree:checked(form,'isFree'),priceEuros:text(form,'priceEuros')?Number(text(form,'priceEuros')):undefined,imageUrl:text(form,'imageUrl')})
-  if(!parsed.success)return{error:parsed.error.issues[0]?.message??'Revisa los datos'};const d=parsed.data
+  if(!parsed.success)return{error:parsed.error.issues[0]?.message??'Revisa los datos'};const d=parsed.data;const organizerId=d.organizerMembershipId;const status=d.status
   try{await withTransaction(async tx=>{
     const organizers=await tx<{id:string}>(`SELECT id FROM memberships WHERE id=$1 AND status='active' AND member_type IN ('professional','school') LIMIT 1`,[organizerId]);if(!organizers[0])throw new Error('ORGANIZER_NOT_FOUND')
     const rows=await tx<{id:string}>(`INSERT INTO events(organizer_membership_id,title,description,image_url,starts_at,ends_at,all_day,modality,venue_name,address,city,province,postal_code,registration_url,public_contact,is_free,price_cents,status,submitted_at,reviewed_by,reviewed_at)
@@ -47,7 +46,7 @@ export async function adminCreateEvent(_prev:ActionState|null,form:FormData):Pro
       [organizerId,d.title,d.description,d.imageUrl||null,d.startsAt,d.endsAt,d.allDay,d.modality,d.venueName||null,d.address||null,d.city||null,d.province||null,d.postalCode||null,d.registrationUrl||null,d.publicContact||null,d.isFree,d.isFree?null:Math.round((d.priceEuros??0)*100),status,admin.id])
     await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'event.created_by_admin','event',$2,$3::jsonb)`,[admin.id,rows[0].id,JSON.stringify({status,organizerId})])
   });revalidatePath('/admin/eventos');revalidatePath('/eventos');revalidatePath('/embed/eventos');return{ok:true}}
-  catch(error){if(error instanceof Error&&error.message==='ORGANIZER_NOT_FOUND')return{error:'Selecciona un profesional o escuela activos'};return{error:'No se pudo crear el evento'}}
+  catch(error){if(error instanceof Error&&error.message==='ORGANIZER_NOT_FOUND')return{error:'El organizador seleccionado ya no está activo. Elige otro profesional o escuela.'};console.error('adminCreateEvent',error);return{error:'No se pudo crear el evento. Revisa los datos e inténtalo de nuevo.'}}
 }
 
 export async function updateEvent(_prev:ActionState|null,form:FormData):Promise<ActionState>{

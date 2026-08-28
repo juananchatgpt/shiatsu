@@ -8,7 +8,7 @@
   comunicaciones, recuperación de contraseña, documentos privados e importador WordPress.
 - Export migrado el 2026-08-26: 400 socios creados desde 401 filas, sin enviar correos. Resultado:
   180 activos, 220 inactivos; 136 alumnos, 252 profesionales y 12 escuelas.
-- `npm run build`, `typecheck`, `lint` y doce pruebas críticas pasan. `npm audit`: cero vulnerabilidades.
+- `npm run build`, `typecheck`, `lint` y trece pruebas críticas pasan. `npm audit`: cero vulnerabilidades.
 - Revisión independiente cerrada: API pública con proyección explícita, migraciones inmutables,
   tokens de recuperación atómicos, auditoría transaccional y reautenticación al cambiar email.
 - Reconciliación: 120 perfiles visibles, 384 números conservados, 16 pendientes, 11 escuelas
@@ -70,6 +70,9 @@
 - El resumen administrativo muestra el total de eventos y un acceso `Ver y editar todos`; el filtro
   de pendientes queda separado. La lista vacía explica si no hay eventos o si el filtro no encuentra
   resultados. El administrador puede editar eventos de cualquier estado desde su ficha.
+- El alta administrativa de eventos exige asignar un profesional o escuela activo. El formulario lo
+  explica y valida el organizador antes de consultar PostgreSQL, mostrando un error claro si falta o
+  dejó de estar activo; el resto de validaciones también se devuelve en español dentro del formulario.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.

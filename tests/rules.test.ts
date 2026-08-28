@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { canCreateEvents, isPublicDirectoryMember } from '../src/lib/access'
-import {adminDeleteMemberSchema,adminEventUpdateSchema,adminManualMemberSchema,adminMemberProfileSchema, registrationSchema, eventSchema } from '../src/lib/validation'
+import {adminDeleteMemberSchema,adminEventCreateSchema,adminEventUpdateSchema,adminManualMemberSchema,adminMemberProfileSchema, registrationSchema, eventSchema } from '../src/lib/validation'
 
 test('un alumno nunca es publicable',()=>{assert.equal(isPublicDirectoryMember('student','active',true),false)})
 test('solo profesional/escuela activos y con opt-in son publicables',()=>{
@@ -48,4 +48,10 @@ test('la edición administrativa de eventos valida ficha y moderación completas
   const base={eventId:'4fda7462-72dc-463c-b7ad-070cab5c7f0b',organizerMembershipId:'67dbc9f8-bf06-4b5c-9396-297dd74d571a',title:'Curso de Shiatsu',description:'Descripción suficientemente larga para validar.',startsAt:'2026-09-20T17:00',endsAt:'2026-09-20T18:00',allDay:false,modality:'in_person',isFree:true,featured:false,moderationNotes:''}
   assert.equal(adminEventUpdateSchema.safeParse({...base,status:'approved'}).success,true)
   assert.equal(adminEventUpdateSchema.safeParse({...base,status:'inventado'}).success,false)
+})
+
+test('el alta administrativa de eventos exige un organizador válido',()=>{
+  const base={title:'Curso de Shiatsu',description:'Descripción suficientemente larga para validar.',startsAt:'2026-09-20T17:00',endsAt:'2026-09-20T18:00',allDay:false,modality:'in_person',isFree:true,status:'approved'}
+  assert.equal(adminEventCreateSchema.safeParse({...base,organizerMembershipId:''}).success,false)
+  assert.equal(adminEventCreateSchema.safeParse({...base,organizerMembershipId:'67dbc9f8-bf06-4b5c-9396-297dd74d571a'}).success,true)
 })

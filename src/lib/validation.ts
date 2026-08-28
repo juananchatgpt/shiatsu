@@ -87,6 +87,11 @@ export const adminEventUpdateSchema = eventSchema.and(z.object({
   featured: z.boolean(),
 }))
 
+export const adminEventCreateSchema = eventSchema.and(z.object({
+  organizerMembershipId: z.string().uuid('Selecciona el profesional o escuela que organiza el evento'),
+  status: z.enum(['draft','pending_review','approved']),
+}))
+
 export const membershipStatusSchema = z.object({
   membershipId: z.string().uuid(), status: z.enum(MEMBER_STATUSES), reason: z.string().trim().max(1000).optional(),
 })
