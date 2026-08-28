@@ -30,6 +30,11 @@ export async function getAdminEvent(id:string){
 export async function listAdminEvents(status?:string) {
   return query<EventRow>(`${SELECT} ${status?'WHERE e.status=$1':''} ORDER BY CASE e.status WHEN 'pending_review' THEN 0 ELSE 1 END,e.created_at DESC LIMIT 300`,status?[status]:[])
 }
+export async function getAdminEventStats(){
+  const rows=await query<{total:number;pending:number}>(`SELECT COUNT(*)::int total,
+    COUNT(*) FILTER (WHERE status='pending_review')::int pending FROM events`)
+  return rows[0]??{total:0,pending:0}
+}
 
 export interface EventOrganizerOption{id:string;name:string;member_type:'professional'|'school'}
 export async function listEventOrganizerOptions(includeMembershipId?:string){return query<EventOrganizerOption>(`SELECT m.id,m.member_type,

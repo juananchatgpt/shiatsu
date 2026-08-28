@@ -3,12 +3,13 @@ import { requireUser, getMembershipContext, canCreateEvents } from '@/lib/access
 import { getAdminStats } from '@/features/memberships/service'
 import { memberStatusLabels, memberTypeLabels } from '@/lib/domain'
 import { StatusBadge } from '@/components/status-badge'
+import { getAdminEventStats } from '@/features/events/service'
 
 export default async function DashboardPage(){
   const user=await requireUser()
   if(user.role==='admin'){
-    const stats=await getAdminStats()
-    return <><div className="mb-8"><p className="text-sm font-bold uppercase tracking-widest text-[var(--apse-clay)]">Administración</p><h1 className="mt-2 text-3xl font-semibold text-emerald-950">Resumen de socios</h1></div><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><Stat label="Socios" value={stats.total}/><Stat label="Pendientes" value={stats.pending}/><Stat label="Activos" value={stats.active}/><Stat label="En directorio" value={stats.directory}/></div><div className="mt-8 flex flex-wrap gap-3"><Link className="apse-button" href="/admin/socios?status=pending">Revisar altas</Link><Link className="apse-button-secondary" href="/admin/eventos?status=pending_review">Revisar eventos</Link></div></>
+    const[stats,eventStats]=await Promise.all([getAdminStats(),getAdminEventStats()])
+    return <><div className="mb-8"><p className="text-sm font-bold uppercase tracking-widest text-[var(--apse-clay)]">Administración</p><h1 className="mt-2 text-3xl font-semibold text-emerald-950">Resumen de socios</h1></div><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><Stat label="Socios" value={stats.total}/><Stat label="Pendientes" value={stats.pending}/><Stat label="Activos" value={stats.active}/><Stat label="En directorio" value={stats.directory}/></div><div className="mt-8 flex flex-wrap gap-3"><Link className="apse-button" href="/admin/socios?status=pending">Revisar altas</Link></div><section className="apse-card mt-8 flex flex-wrap items-center justify-between gap-5 p-6"><div><p className="text-sm font-bold uppercase tracking-wide text-[var(--apse-clay)]">Eventos</p><h2 className="mt-1 text-2xl font-semibold text-emerald-950">{eventStats.total} eventos en total</h2><p className="mt-1 text-sm text-stone-600">{eventStats.pending} pendientes de revisión. El administrador puede abrir y editar cualquier evento.</p></div><div className="flex flex-wrap gap-3"><Link className="apse-button" href="/admin/eventos">Ver y editar todos</Link>{eventStats.pending>0&&<Link className="apse-button-secondary" href="/admin/eventos?status=pending_review">Ver pendientes</Link>}</div></section></>
   }
   const membership=await getMembershipContext(user.id)
   if(!membership)return <div className="apse-card p-8"><h1 className="text-2xl font-semibold">Cuenta sin membresía</h1><p className="mt-2 text-stone-600">Contacta con APSE para revisar tu cuenta.</p></div>

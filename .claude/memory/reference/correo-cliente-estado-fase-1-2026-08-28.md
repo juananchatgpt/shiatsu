@@ -35,7 +35,7 @@ También se han incorporado validaciones para evitar errores y proteger los dato
 - No se puede desactivar el último administrador ni borrar accidentalmente un socio sin confirmación.
 - La información privada no se muestra en el directorio público.
 
-La información de la web anterior ya se ha migrado. Actualmente hay 405 socios en la aplicación,
+La información de la web anterior ya se ha migrado. Actualmente hay 404 socios en la aplicación,
 con sus estados, tipos, números disponibles e imágenes recuperadas. No se ha enviado ningún correo
 durante la migración. Cada socio podrá establecer su acceso mediante la recuperación de contraseña
 cuando sea necesario.

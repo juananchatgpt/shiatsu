@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS membership_cover_images (
 );
 
 CREATE TABLE IF NOT EXISTS events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), organizer_membership_id UUID NOT NULL REFERENCES memberships(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(), organizer_membership_id UUID NOT NULL REFERENCES memberships(id) ON DELETE RESTRICT,
   title TEXT NOT NULL, description TEXT NOT NULL, image_url TEXT, starts_at TIMESTAMPTZ NOT NULL, ends_at TIMESTAMPTZ NOT NULL,
   all_day BOOLEAN NOT NULL DEFAULT false, timezone TEXT NOT NULL DEFAULT 'Europe/Madrid',
   modality TEXT NOT NULL DEFAULT 'in_person' CHECK (modality IN ('in_person', 'online', 'hybrid')),

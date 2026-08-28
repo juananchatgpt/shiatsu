@@ -27,6 +27,10 @@
 > **Update 2026-08-27 · moderación de eventos**: cada evento dispone de ficha administrativa con
 > edición completa de sus datos, organizador, visibilidad destacada, notas internas y estado. La
 > aprobación se realiza tras revisar la ficha y la vuelta conserva el filtro del listado.
+>
+> **Update 2026-08-28 · conservación de eventos**: administración ve y edita todos los eventos desde
+> un acceso sin filtro. Un socio con eventos ya no se puede borrar hasta reasignarlos; la migración
+> `008` sustituye el borrado en cascada por una restricción para conservar el contenido editorial.
 
 ---
 

@@ -22,8 +22,8 @@
   de prueba/técnicas, 1 administrador técnico y Barry Davidson (#119), que carece de email.
 - Recuento tras el segundo import: 404 socios; 180 activos y 224 inactivos; 138 alumnos, 254
   profesionales y 12 escuelas. Hay 386 números conservados y 18 perfiles sin número.
-- Recuento real consultado el 2026-08-28: 405 socios; 181 activos y 224 inactivos; 138 alumnos, 255
-  profesionales y 12 escuelas. El aumento respecto al import corresponde a un alta posterior.
+- Recuento real tras las pruebas del 2026-08-28: 404 socios. Se creó y posteriormente se borró un
+  profesional de prueba, por lo que el total volvió al recuento posterior a la importación.
 - Migración `004` aplicada: Twitter/X (3), nivel docente (9), escuelas donde imparte (7), año de
   inicio docente (8) y observaciones a notas internas (149). Snapshot:
   `backup_pre_directory_import_20260826`.
@@ -53,9 +53,9 @@
   pública. Las fechas de renovación se convierten a texto en la consulta para evitar errores 500
   al abrir una ficha recién activada.
 - La ficha administrativa permite borrar definitivamente un socio escribiendo `BORRAR`. El borrado
-  elimina por cascada cuenta, sesiones, perfil, documentos, imágenes, eventos y entregas preparadas,
-  y deja auditoría. Un profesional con una escuela vinculada no se puede borrar hasta reasignarla o
-  eliminarla; para conservar historial se recomienda usar `Inactivo`.
+  elimina por cascada cuenta, sesiones, perfil, documentos e imágenes y deja auditoría. No permite
+  borrar un socio con una escuela o eventos vinculados: primero hay que reasignarlos. Para conservar
+  historial se recomienda usar `Inactivo`.
 - Los formularios de eventos muestran en español las validaciones de título, descripción y fechas;
   la descripción indica y exige en el navegador un mínimo de 20 caracteres.
 - Cada evento tiene una ficha administrativa completa. Desde ella se revisan y editan organizador,
@@ -63,6 +63,13 @@
   estado; seleccionar `Aprobado` lo publica. Al volver se conserva el filtro del listado.
 - El listado público y el widget de eventos muestran la imagen configurada en cada evento en formato
   panorámico y adaptable; si no hay imagen, la tarjeta mantiene el diseño sin reservar hueco.
+- Incidencia 2026-08-28: el único evento desapareció porque se borró su socio organizador de prueba
+  y la relación histórica usaba `ON DELETE CASCADE`. La migración `008` cambia la relación a
+  `ON DELETE RESTRICT`; la acción administrativa también bloquea el borrado y explica que primero se
+  deben reasignar los eventos. El evento eliminado no se recrea sin elegir un organizador válido.
+- El resumen administrativo muestra el total de eventos y un acceso `Ver y editar todos`; el filtro
+  de pendientes queda separado. La lista vacía explica si no hay eventos o si el filtro no encuentra
+  resultados. El administrador puede editar eventos de cualquier estado desde su ficha.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.
