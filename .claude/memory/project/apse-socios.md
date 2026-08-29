@@ -89,9 +89,13 @@
 - Preparados los avisos transaccionales de solicitud, decisión y Secretaría, sin contraseñas en los
   mensajes. Permanecen totalmente desactivados mientras `REGISTRATION_EMAILS_ENABLED` no sea `true`.
 - Código del nuevo flujo publicado en GitHub con el commit `6876f51` y migración `009` aplicada a
-  PostgreSQL. Producción sigue saludable (`/api/health` 200), pero el contenedor aún ejecuta el build
-  anterior: `easypanel.alza-t.com` exige sesión interactiva, el token global pertenece al segundo
-  Easypanel y el SSH del primer servidor solo acepta una clave no disponible en este equipo.
+  PostgreSQL. Juanan desplegó después el contenedor y se verificaron en producción `/api/health`,
+  registro, directorio, eventos y ambos embeds con respuesta 200; los chunks servidos coinciden con
+  el build local.
+- Los widgets funcionan actualmente en cualquier web: `widgets.js` y las APIs públicas responden
+  con `Access-Control-Allow-Origin: *`, y los embeds no envían `X-Frame-Options` ni una política
+  `frame-ancestors`. `WIDGET_ALLOWED_ORIGINS` existe en el entorno de ejemplo pero el código no lo
+  aplica; restringir dominios requeriría una adaptación posterior.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.
@@ -117,8 +121,6 @@
 - Resolver desde administración los 16 números de socio pendientes y la escuela sin profesional.
 - Para activar los avisos de altas: confirmar emails de Secretaría, revisar textos y aportar la URL
   del PDF/ayuda; después configurar las variables y hacer una prueba controlada con autorización.
-- Publicar el commit `6876f51` desde el botón Deploy de `alzat/shiatsuapp` en el primer Easypanel, o
-  facilitar una sesión/API key/clave SSH válida para que el agente pueda hacerlo y verificarlo.
 
 ## Decisiones
 
