@@ -9,6 +9,8 @@ export interface MembershipContext {
   status: MemberStatus
   directory_opt_in: boolean
   member_number: string | null
+  profile_completed_at?:string|null
+  payment_confirmed_at?:string|null
 }
 
 export async function requireUser() {
@@ -25,7 +27,7 @@ export async function requireAdmin() {
 
 export async function getMembershipContext(userId: string) {
   const rows = await query<MembershipContext>(
-    `SELECT id AS membership_id, member_type, status, directory_opt_in, member_number
+    `SELECT id AS membership_id, member_type, status, directory_opt_in, member_number,profile_completed_at::text,payment_confirmed_at::text
      FROM memberships WHERE user_id = $1 LIMIT 1`, [userId],
   )
   return rows[0] ?? null

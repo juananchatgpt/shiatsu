@@ -1,7 +1,7 @@
 export const MEMBER_TYPES = ['student', 'professional', 'school'] as const
 export type MemberType = (typeof MEMBER_TYPES)[number]
 
-export const MEMBER_STATUSES = ['pending', 'active', 'inactive', 'suspended', 'rejected'] as const
+export const MEMBER_STATUSES = ['pending', 'pre_registered', 'active', 'inactive', 'suspended', 'rejected'] as const
 export type MemberStatus = (typeof MEMBER_STATUSES)[number]
 
 export const EVENT_STATUSES = ['draft', 'pending_review', 'approved', 'rejected', 'cancelled'] as const
@@ -11,7 +11,7 @@ export const memberTypeLabels: Record<MemberType, string> = {
   student: 'Alumno', professional: 'Profesional', school: 'Escuela',
 }
 export const memberStatusLabels: Record<MemberStatus, string> = {
-  pending: 'Pendiente', active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', rejected: 'Rechazado',
+  pending: 'Pendiente de revisión', pre_registered: 'Pre-registro', active: 'Activo', inactive: 'Inactivo', suspended: 'Suspendido', rejected: 'Rechazado',
 }
 export const eventStatusLabels: Record<EventStatus, string> = {
   draft: 'Borrador', pending_review: 'Pendiente de revisión', approved: 'Aprobado', rejected: 'Rechazado', cancelled: 'Cancelado',
@@ -36,7 +36,7 @@ export function formatMoney(cents: number) {
 
 export function statusTone(status: string) {
   if (status === 'active' || status === 'approved') return 'bg-emerald-100 text-emerald-800'
-  if (status === 'pending' || status === 'pending_review') return 'bg-amber-100 text-amber-800'
+  if (status === 'pending' || status === 'pending_review' || status === 'pre_registered') return 'bg-amber-100 text-amber-800'
   if (status === 'rejected' || status === 'suspended') return 'bg-red-100 text-red-800'
   return 'bg-stone-100 text-stone-700'
 }

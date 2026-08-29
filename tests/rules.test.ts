@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { canCreateEvents, isPublicDirectoryMember } from '../src/lib/access'
 import {adminDeleteMemberSchema,adminEventCreateSchema,adminEventUpdateSchema,adminManualMemberSchema,adminMemberProfileSchema, registrationSchema, eventSchema } from '../src/lib/validation'
+import {getProfileCompletionIssues} from '../src/features/memberships/profile-completion'
 
 test('un alumno nunca es publicable',()=>{assert.equal(isPublicDirectoryMember('student','active',true),false)})
 test('solo profesional/escuela activos y con opt-in son publicables',()=>{
@@ -37,6 +38,19 @@ test('el administrador debe repetir correctamente la nueva contraseña',()=>{
 test('el alta manual de escuela exige nombre del centro',()=>{
   const result=adminManualMemberSchema.safeParse({memberType:'school',status:'active',email:'escuela@example.com',password:'segura123',firstName:'Escuela',lastName:'',directoryOptIn:false,insuranceSelected:false,schoolName:''})
   assert.equal(result.success,false)
+})
+
+test('el pre-registro solo considera completo el perfil con datos privados obligatorios',()=>{
+  const complete={firstName:'Ana',lastName:'Pérez',identityDocument:'12345678A',phone:'600000000',address:'Calle Mayor 1',postalCode:'45001',city:'Toledo',province:'Toledo',schoolOrigin:'Escuela Centro',directoryOptIn:false}
+  assert.deepEqual(getProfileCompletionIssues('student',complete),[])
+  assert.ok(getProfileCompletionIssues('student',{...complete,address:''}).includes('dirección'))
+})
+
+test('si se solicita directorio también son obligatorios los datos públicos esenciales',()=>{
+  const base={firstName:'Ana',lastName:'Pérez',identityDocument:'12345678A',phone:'600000000',address:'Calle Mayor 1',postalCode:'45001',city:'Toledo',province:'Toledo',trainingSchool:'APSE',qualificationSummary:'Formación completa'}
+  const issues=getProfileCompletionIssues('professional',{...base,directoryOptIn:true})
+  assert.ok(issues.includes('nombre público'))
+  assert.equal(getProfileCompletionIssues('professional',{...base,directoryOptIn:false}).length,0)
 })
 
 test('el borrado administrativo exige confirmación literal',()=>{

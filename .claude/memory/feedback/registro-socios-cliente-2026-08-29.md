@@ -23,13 +23,13 @@ El cliente describe el siguiente flujo histórico:
 - Las altas, aprobaciones y rechazos no generan todavía los avisos transaccionales descritos.
 - La contraseña elegida por el solicitante y la privacidad del directorio ya coinciden con el flujo.
 
-## Ambigüedad pendiente
+## Decisión aplicada
 
 El mensaje afirma primero que Secretaría activa el perfil cuando confirma el pago, pero después dice
-que completar el perfil lo vuelve activo. Antes de implementar hay que fijar la regla. Propuesta:
-activar solo cuando concurran `pago confirmado` y `perfil completo`; Secretaría confirma el pago y el
-sistema asigna el número una sola vez cuando se cumplen ambas condiciones.
+que completar el perfil lo vuelve activo. El 2026-08-29 se adopta la regla más segura: activar solo
+cuando concurran `pago confirmado` y `perfil completo`; Secretaría confirma el pago y el sistema
+asigna el número una sola vez cuando se cumplen ambas condiciones.
 
-También hay que confirmar si este flujo se aplica por igual a alumnos, profesionales y escuelas, y
-obtener destinatario(s) de Secretaría, textos de correo y PDF/enlace de ayuda. No se enviará ningún
-correo real durante desarrollo o migraciones sin autorización expresa.
+El flujo se aplica a alumnos, profesionales y escuelas. Falta obtener destinatario(s) de Secretaría,
+validar textos de correo y aportar el PDF/enlace de ayuda. Los avisos están detrás de
+`REGISTRATION_EMAILS_ENABLED=false`; no se enviará ningún correo real sin activación expresa.

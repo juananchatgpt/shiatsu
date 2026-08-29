@@ -1,6 +1,6 @@
 # APSE · Gestión de socios
 
-## Estado 2026-08-28
+## Estado 2026-08-29
 
 - Aplicación fase 1 construida desde SaaS Factory Postgres.
 - PRP activo: `../../PRPs/PRP-001-gestion-socios-apse.md`.
@@ -78,6 +78,16 @@
   probaron en una transacción con rollback los estados borrador, pendiente, aprobado y rechazado.
 - Juanan confirmó el 2026-08-28 que la creación de eventos desde Administración ya funciona en
   producción tras desplegar el commit `0810a06`.
+- Implementado el flujo de altas `Pendiente de revisión -> Pre-registro -> Activo`. Aprobar ya no
+  activa ni numera: la activación automática exige perfil obligatorio completo y pago confirmado
+  manualmente por Secretaría. La migración `009` se aplicó sin modificar los 180 activos ni los 224
+  inactivos existentes.
+- La ficha administrativa muestra por separado aprobación, perfil y pago; permite confirmar el pago
+  y explica qué condición falta. Un profesional requiere una titulación marcada como válida antes de
+  aprobar el alta. El área privada guía al solicitante y valida campos obligatorios por tipo; si pide
+  directorio también exige los datos públicos esenciales.
+- Preparados los avisos transaccionales de solicitud, decisión y Secretaría, sin contraseñas en los
+  mensajes. Permanecen totalmente desactivados mientras `REGISTRATION_EMAILS_ENABLED` no sea `true`.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.
@@ -101,9 +111,8 @@
   dura 24 horas y se puede regenerar con `npm run admin:invite`.
 - Acceso WordPress para insertar widgets cuando corresponda.
 - Resolver desde administración los 16 números de socio pendientes y la escuela sin profesional.
-- Definir el nuevo flujo solicitado de altas con estado intermedio `aprobado/pre-registro`: falta
-  decidir si la activación exige pago confirmado, perfil completo o ambos. Detalle en
-  `../feedback/registro-socios-cliente-2026-08-29.md`.
+- Para activar los avisos de altas: confirmar emails de Secretaría, revisar textos y aportar la URL
+  del PDF/ayuda; después configurar las variables y hacer una prueba controlada con autorización.
 
 ## Decisiones
 
@@ -117,7 +126,8 @@
   ruta pública exige socio activo, consentimiento de directorio y tipo profesional/escuela.
 - Las portadas usan `membership_cover_images`; son exclusivas de escuelas y aplican las mismas reglas
   de privacidad pública que las fotos.
-- Fase 1 no gestiona pagos ni campañas masivas.
+- Fase 1 solo registra manualmente la confirmación del primer pago; no cobra ni gestiona impagos,
+  renovaciones o GoCardless. Las campañas masivas siguen fuera de alcance.
 - Las altas manuales administrativas crean una contraseña inicial y no envían ningún correo. Si el
   estado inicial es activo y no se indica número, la aplicación asigna el siguiente número APSE.
 - Los eventos creados por administración se vinculan siempre a un profesional o escuela activos y

@@ -19,12 +19,14 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 CREATE TABLE IF NOT EXISTS memberships (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   member_number TEXT UNIQUE, member_type TEXT NOT NULL CHECK (member_type IN ('student', 'professional', 'school')),
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'inactive', 'suspended', 'rejected')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'pre_registered', 'active', 'inactive', 'suspended', 'rejected')),
   insurance_selected BOOLEAN NOT NULL DEFAULT false, base_fee_cents INTEGER NOT NULL CHECK (base_fee_cents >= 0),
   insurance_fee_cents INTEGER NOT NULL DEFAULT 0 CHECK (insurance_fee_cents >= 0), anniversary_date DATE,
   directory_opt_in BOOLEAN NOT NULL DEFAULT false, privacy_accepted_at TIMESTAMPTZ NOT NULL,
   rejection_reason TEXT, internal_notes TEXT, approved_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  approved_at TIMESTAMPTZ, legacy_source_id TEXT, legacy_data JSONB,
+  approved_at TIMESTAMPTZ, profile_completed_at TIMESTAMPTZ,
+  payment_confirmed_at TIMESTAMPTZ, payment_confirmed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  legacy_source_id TEXT, legacy_data JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE SEQUENCE IF NOT EXISTS member_number_seq START 1;

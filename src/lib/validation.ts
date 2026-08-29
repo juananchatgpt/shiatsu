@@ -96,6 +96,10 @@ export const membershipStatusSchema = z.object({
   membershipId: z.string().uuid(), status: z.enum(MEMBER_STATUSES), reason: z.string().trim().max(1000).optional(),
 })
 
+export const membershipPaymentSchema = z.object({
+  membershipId: z.string().uuid(), confirmed: z.enum(['true', 'false']).transform(value => value === 'true'),
+})
+
 export const adminDeleteMemberSchema = z.object({
   membershipId: z.string().uuid(),
   confirmation: z.literal('BORRAR', { errorMap: () => ({ message: 'Escribe BORRAR para confirmar' }) }),

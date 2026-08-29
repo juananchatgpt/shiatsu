@@ -1,13 +1,16 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { hashPassword, verifyPassword } from '@/lib/auth'
 import { withTransaction } from '@/lib/db'
 import { FEES_CENTS, type MemberType } from '@/lib/domain'
 import { registrationSchema, profileSchema } from '@/lib/validation'
 import { requireUser } from '@/lib/access'
 import { checkPublicRateLimit } from '@/lib/rate-limit'
+import { getProfileCompletionIssues } from '@/features/memberships/profile-completion'
+import { notifyRegistrationSubmitted } from '@/features/memberships/registration-notifications'
 
-export interface ActionState { ok?: boolean; error?: string }
+export interface ActionState { ok?: boolean; error?: string; message?:string; profileComplete?:boolean; activated?:boolean }
 const checked = (form: FormData, name: string) => form.get(name) === 'on'
 const text = (form: FormData, name: string) => String(form.get(name) ?? '')
 
@@ -31,7 +34,7 @@ export async function registerMember(_prev: ActionState | null, form: FormData):
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
   const data = parsed.data
   try {
-    await withTransaction(async (tx) => {
+    const created=await withTransaction(async (tx) => {
       let responsibleId: string | null = null
       if (data.memberType === 'school') {
         const responsible = await tx<{ id: string }>(
@@ -71,7 +74,9 @@ export async function registerMember(_prev: ActionState | null, form: FormData):
       )
       await tx(`INSERT INTO audit_log (action,entity_type,entity_id,details) VALUES ('membership.registered','membership',$1,$2::jsonb)`,
         [membershipId, JSON.stringify({ memberType: data.memberType })])
+      return{email:data.email,name:`${data.firstName} ${data.lastName}`.trim(),memberType:data.memberType,membershipId}
     })
+    await notifyRegistrationSubmitted(created)
     return { ok: true }
   } catch (error) {
     if (error instanceof Error && error.message === 'RESPONSIBLE_NOT_FOUND') return { error: 'El profesional responsable no existe, no está activo o ya tiene una escuela' }
@@ -100,10 +105,11 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Revisa los datos' }
   const d = parsed.data
   try {
-    await withTransaction(async (tx) => {
-      const memberships = await tx<{ id:string; member_type:MemberType; email:string; password_hash:string }>(`SELECT m.id,m.member_type,u.email,u.password_hash FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.user_id=$1 LIMIT 1`,[user.id])
+    const result=await withTransaction(async (tx) => {
+      const memberships = await tx<{ id:string; member_type:MemberType; status:string; email:string; password_hash:string }>(`SELECT m.id,m.member_type,m.status,u.email,u.password_hash FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.user_id=$1 FOR UPDATE OF m,u`,[user.id])
       if (!memberships[0]) throw new Error('NO_MEMBERSHIP')
       const m=memberships[0]
+      const completionIssues=getProfileCompletionIssues(m.member_type,d);const profileComplete=completionIssues.length===0
       if(d.email!==m.email&&(!d.currentPassword||!await verifyPassword(d.currentPassword,m.password_hash)))throw new Error('REAUTH_REQUIRED')
       await tx('UPDATE users SET email=$1,full_name=$2,updated_at=now() WHERE id=$3',[d.email,`${d.firstName} ${d.lastName}`.trim(),user.id])
       const insured=m.member_type!=='student'&&d.insuranceSelected
@@ -121,9 +127,18 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
         teaching_level=$3,teaching_schools=$4,teaching_since_year=$5 WHERE membership_id=$6`,[d.trainingSchool||null,
         d.qualificationSummary||null,d.teachingLevel||null,d.teachingSchools||null,d.teachingSinceYear||null,m.id])
       if(m.member_type==='school')await tx(`UPDATE school_profiles SET school_name=$1,description=$2,program_summary=$3,teachers_summary=$4,direction_experience_summary=$5,center_type=$6,languages=$7 WHERE membership_id=$8`,[d.schoolName||'Escuela',d.schoolDescription||null,d.programSummary||null,d.teachersSummary||null,d.directionExperienceSummary||null,d.centerType||null,d.languages||null,m.id])
-      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id) VALUES($1,'membership.profile_updated','membership',$2)`,[user.id,m.id])
+      const workflow=await tx<{status:string}>(`UPDATE memberships SET
+        profile_completed_at=CASE WHEN status IN ('pending','pre_registered') THEN CASE WHEN $1 THEN COALESCE(profile_completed_at,now()) ELSE NULL END ELSE profile_completed_at END,
+        status=CASE WHEN status='pre_registered' AND $1 AND payment_confirmed_at IS NOT NULL THEN 'active' ELSE status END,
+        anniversary_date=CASE WHEN status='pre_registered' AND $1 AND payment_confirmed_at IS NOT NULL THEN COALESCE(anniversary_date,CURRENT_DATE) ELSE anniversary_date END,
+        member_number=CASE WHEN status='pre_registered' AND $1 AND payment_confirmed_at IS NOT NULL AND member_number IS NULL THEN nextval('member_number_seq')::text ELSE member_number END,
+        updated_at=now() WHERE id=$2 RETURNING status`,[profileComplete,m.id])
+      const activated=m.status!=='active'&&workflow[0]?.status==='active'
+      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.profile_updated','membership',$2,$3::jsonb)`,[user.id,m.id,JSON.stringify({profileComplete,activated})])
+      return{membershipId:m.id,profileComplete,completionIssues,activated}
     })
-    return { ok:true }
+    revalidatePath('/dashboard');revalidatePath('/perfil');revalidatePath('/directorio');revalidatePath(`/directorio/${result.membershipId}`);revalidatePath('/embed/directorio')
+    return {ok:true,profileComplete:result.profileComplete,activated:result.activated,message:result.activated?'Perfil completado y alta activada. Ya tienes asignado tu número de socio.':result.profileComplete?'Perfil completo. Quedará activo cuando Secretaría confirme el pago.':`Cambios guardados. Para completar el perfil faltan: ${result.completionIssues.join(', ')}.`}
   } catch(error) {
     if(error instanceof Error&&error.message==='REAUTH_REQUIRED')return{error:'Escribe tu contraseña actual para cambiar el email de acceso'}
     if (typeof error === 'object' && error && 'code' in error && error.code === '23505') return { error:'Ese email ya está en uso' }

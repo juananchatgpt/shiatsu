@@ -5,6 +5,7 @@ export interface MembershipDetail {
   id: string; user_id: string; email: string; full_name: string | null; member_number: string | null
   member_type: MemberType; status: MemberStatus; insurance_selected: boolean; base_fee_cents: number
   insurance_fee_cents: number; anniversary_date: string | null; directory_opt_in: boolean
+  approved_at:string|null;profile_completed_at:string|null;payment_confirmed_at:string|null
   rejection_reason: string | null; first_name: string; last_name: string; identity_document: string | null
   phone: string | null; secondary_phone: string | null; address: string | null; postal_code: string | null
   city: string | null; province: string | null; public_name: string | null; public_email: string | null
@@ -23,7 +24,7 @@ export interface MembershipDetail {
 const DETAIL_SELECT = `
   SELECT m.id, m.user_id, u.email, u.full_name, m.member_number, m.member_type, m.status,
     m.insurance_selected, m.base_fee_cents, m.insurance_fee_cents, m.anniversary_date::text AS anniversary_date,
-    m.directory_opt_in, m.rejection_reason, p.first_name, p.last_name, p.identity_document,
+    m.directory_opt_in, m.rejection_reason,m.approved_at::text,m.profile_completed_at::text,m.payment_confirmed_at::text, p.first_name, p.last_name, p.identity_document,
     p.phone, p.secondary_phone, p.address, p.postal_code, p.city, p.province,
     p.public_name, p.public_email, p.public_phone, p.public_address, p.public_postal_code,
     p.public_city, p.public_province, p.website, p.bio, p.facebook_url, p.instagram_url, p.youtube_url,p.twitter_url,
@@ -79,7 +80,7 @@ export async function listAdminMembers(filters: { type?: string; status?: string
       m.directory_opt_in, p.first_name, p.last_name, p.province, m.created_at
      FROM memberships m JOIN users u ON u.id=m.user_id JOIN member_profiles p ON p.membership_id=m.id
      ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
-     ORDER BY CASE m.status WHEN 'pending' THEN 0 ELSE 1 END, m.created_at DESC LIMIT 500`, params,
+     ORDER BY CASE m.status WHEN 'pending' THEN 0 WHEN 'pre_registered' THEN 1 ELSE 2 END, m.created_at DESC LIMIT 500`, params,
   )
 }
 
@@ -148,10 +149,11 @@ export async function getPublicDirectoryMember(id:string){
 }
 
 export async function getAdminStats() {
-  const rows = await query<{ total: number; pending: number; active: number; directory: number }>(
+  const rows = await query<{ total: number; pending: number; preRegistered:number; active: number; directory: number }>(
     `SELECT COUNT(*)::int total, COUNT(*) FILTER (WHERE status='pending')::int pending,
+      COUNT(*) FILTER (WHERE status='pre_registered')::int "preRegistered",
       COUNT(*) FILTER (WHERE status='active')::int active,
       COUNT(*) FILTER (WHERE status='active' AND directory_opt_in)::int directory FROM memberships`,
   )
-  return rows[0] ?? { total: 0, pending: 0, active: 0, directory: 0 }
+  return rows[0] ?? { total: 0, pending: 0, preRegistered:0, active: 0, directory: 0 }
 }

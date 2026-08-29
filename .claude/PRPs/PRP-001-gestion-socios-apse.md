@@ -31,6 +31,12 @@
 > **Update 2026-08-28 · conservación de eventos**: administración ve y edita todos los eventos desde
 > un acceso sin filtro. Un socio con eventos ya no se puede borrar hasta reasignarlos; la migración
 > `008` sustituye el borrado en cascada por una restricción para conservar el contenido editorial.
+>
+> **Update 2026-08-29 · pre-registro y pago manual**: las altas siguen ahora
+> `pending -> pre_registered -> active`. La aprobación crea el pre-registro; la activación y el
+> número de socio solo se producen cuando el perfil obligatorio está completo y Secretaría ha
+> confirmado manualmente el pago. Los avisos transaccionales están implementados pero desactivados
+> por defecto hasta validar destinatarios, textos y ayuda.
 
 ---
 
@@ -81,7 +87,8 @@ sistema, reducir duplicidades y publicar directorio y eventos en la nueva web co
 - Seguro para escuela: casilla de interés, sin precio asociado en la fase 1.
 - El seguro es un check en el alta; no incrementa la cuota y no es una póliza ni un flujo documental separado.
 - Cada alta tendrá su propia fecha de aniversario.
-- La fase 1 no controla pagos, impagos ni renovaciones y no integra GoCardless.
+- La fase 1 registra únicamente la confirmación manual del primer pago por Secretaría. No cobra,
+  no controla impagos o renovaciones y no integra GoCardless.
 
 > La cuota de escuela se interpreta provisionalmente como 95 € porque la respuesta recibida fue
 > “me valen” sobre los importes propuestos. Debe validarse explícitamente antes de la fase 2.
@@ -92,7 +99,10 @@ sistema, reducir duplicidades y publicar directorio y eventos en la nueva web co
 - Solo las altas requieren aprobación administrativa.
 - Después de aprobada el alta, el socio puede cambiar todos sus datos, incluido el correo, sin
   nueva aprobación.
-- Estados iniciales previstos: `pending`, `active`, `inactive`, `suspended` y `rejected`.
+- Estados: `pending`, `pre_registered`, `active`, `inactive`, `suspended` y `rejected`.
+- La aprobación administrativa pasa la solicitud a `pre_registered`; no la activa.
+- En pre-registro se guardan por separado la finalización del perfil y la confirmación manual del
+  pago. Solo cuando constan ambas se asigna el número y se activa la membresía.
 - La visibilidad pública es una elección binaria del profesional o escuela. Si no la activa, no se
   publica ningún dato de su perfil.
 - DNI/NIE, documentos, estados administrativos y demás información privada nunca se exponen en
