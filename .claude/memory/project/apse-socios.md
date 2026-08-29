@@ -101,6 +101,9 @@
   dura 24 horas y se puede regenerar con `npm run admin:invite`.
 - Acceso WordPress para insertar widgets cuando corresponda.
 - Resolver desde administración los 16 números de socio pendientes y la escuela sin profesional.
+- Definir el nuevo flujo solicitado de altas con estado intermedio `aprobado/pre-registro`: falta
+  decidir si la activación exige pago confirmado, perfil completo o ambos. Detalle en
+  `../feedback/registro-socios-cliente-2026-08-29.md`.
 
 ## Decisiones
 

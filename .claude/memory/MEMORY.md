@@ -10,7 +10,7 @@
 - [APSE socios](project/apse-socios.md) — estado, alcance y bloqueos de la aplicación.
 
 ## feedback/ — Correcciones y preferencias
-(vacio)
+- [Proceso de registro indicado por el cliente](feedback/registro-socios-cliente-2026-08-29.md) — flujo legado solicitado y decisiones pendientes antes de adaptarlo.
 
 ## reference/ — Donde encontrar cosas
 - El export WordPress privado está en la raíz y se inspecciona con `npm run wp:inspect`; nunca se versiona.
