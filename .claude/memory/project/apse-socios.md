@@ -63,6 +63,9 @@
   estado; seleccionar `Aprobado` lo publica. Al volver se conserva el filtro del listado.
 - El listado público y el widget de eventos muestran la imagen configurada en cada evento en formato
   panorámico y adaptable; si no hay imagen, la tarjeta mantiene el diseño sin reservar hueco.
+- Eventos públicos y widget ofrecen dos vistas: lista y calendario mensual con navegación entre
+  meses. El calendario abre en el mes del próximo evento, muestra actividades de varios días en cada
+  fecha afectada y mantiene los datos privados de moderación fuera del cliente.
 - Incidencia 2026-08-28: el único evento desapareció porque se borró su socio organizador de prueba
   y la relación histórica usaba `ON DELETE CASCADE`. La migración `008` cambia la relación a
   `ON DELETE RESTRICT`; la acción administrativa también bloquea el borrado y explica que primero se
@@ -103,6 +106,8 @@
   responden con `Access-Control-Allow-Origin: *`, y los embeds no envían `X-Frame-Options` ni una
   política `frame-ancestors`. `WIDGET_ALLOWED_ORIGINS` existe en el entorno de ejemplo pero el código
   no lo aplica; restringir dominios requeriría una adaptación posterior.
+- La portada `/` es ahora el login. La cabecera pública no muestra menú y su marca APSE enlaza a
+  `https://shiatsu.ochoesferas.com/`; el menú autenticado de socios y administración se conserva.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.

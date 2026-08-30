@@ -9,3 +9,5 @@ export function toPublicEvent(event:EventRow){return {
   priceCents:event.price_cents,currency:event.currency,featured:event.featured,
   organizerName:event.organizer_name,organizerType:event.organizer_type,
 }}
+
+export type PublicEvent = ReturnType<typeof toPublicEvent>
