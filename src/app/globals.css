@@ -7,7 +7,9 @@
   --apse-green: #315747;
   --apse-green-light: #dce7df;
   --apse-cream: #f5f1e8;
-  --apse-clay: #b8664f;
+  --apse-clay: #538a54;
+  --apse-accent: #7bb07c;
+  --apse-accent-alt: #538a54;
   --apse-gold: #c7a763;
 }
 
@@ -24,10 +26,11 @@ body {
 
 @layer components {
   .apse-container { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
-  .apse-card { @apply rounded-2xl border border-stone-200 bg-white shadow-sm; }
-  .apse-input { @apply w-full rounded-xl border border-stone-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10; }
+  .apse-card { @apply rounded-lg border border-stone-200 bg-white shadow-sm; }
+  .apse-input { @apply w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#538a54] focus:ring-2 focus:ring-[#538a54]/10; }
   .apse-label { @apply mb-1.5 block text-sm font-medium text-slate-700; }
-  .apse-button { @apply inline-flex items-center justify-center rounded-xl bg-emerald-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-50; }
-  .apse-button-secondary { @apply inline-flex items-center justify-center rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-stone-50; }
+  .apse-button { @apply inline-flex items-center justify-center rounded-[3px] bg-[#538a54] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50; }
+  .apse-button-secondary { @apply inline-flex items-center justify-center rounded-[3px] border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-black hover:bg-black hover:text-white; }
+  .apse-button-directory { @apply inline-flex items-center justify-center rounded-[3px] bg-[#7bb07c] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#538a54]; }
   .apse-pill { @apply inline-flex rounded-full px-2.5 py-1 text-xs font-semibold; }
 }

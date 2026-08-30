@@ -108,6 +108,10 @@
   no lo aplica; restringir dominios requeriría una adaptación posterior.
 - La portada `/` es ahora el login. La cabecera pública no muestra menú y su marca APSE enlaza a
   `https://shiatsu.ochoesferas.com/`; el menú autenticado de socios y administración se conserva.
+- Aplicada la guía visual del cliente del 2026-08-30 a altas, directorio, fichas y eventos: tarjetas,
+  inputs e imágenes a 8 px; botones a 3 px; acentos `#7BB07C` y `#538A54`; hover negro en eventos;
+  etiquetas con 1 px de espaciado; H1 de alta a 40/32/26 px y título del tipo a 36 px. La revisión
+  visual confirmó los tamaños responsive y radios tanto en escritorio como en móvil.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.
