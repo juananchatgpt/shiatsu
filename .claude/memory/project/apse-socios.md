@@ -52,6 +52,7 @@
   El widget también carga únicamente las provincias que tienen perfiles públicos para el tipo
   seleccionado y descarta cualquier provincia que ya no sea válida.
 - El widget del directorio muestra tres fichas por fila en escritorio, dos en tablet y una en móvil.
+- Los filtros del widget permanecen fijos en la parte superior mientras se recorren las fichas.
 - La búsqueda pública por nombre o escuela ignora mayúsculas, minúsculas y signos diacríticos
   (tildes, diéresis y `ñ`) tanto en el directorio completo como en el widget.
 - Corregido el primer alta posterior a la importación: la numeración continúa la serie histórica
