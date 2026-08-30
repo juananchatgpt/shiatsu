@@ -1,5 +1,6 @@
 import { query } from '@/lib/db'
 import type { MemberStatus, MemberType } from '@/lib/domain'
+import { normalizeDirectorySearch, normalizedDirectorySql } from './directory-search'
 
 export interface MembershipDetail {
   id: string; user_id: string; email: string; full_name: string | null; member_number: string | null
@@ -101,8 +102,11 @@ export async function listPublicDirectory(filters: { type?: string; province?: s
   }
   if (filters.province) { params.push(filters.province); conditions.push(`p.public_province = $${params.length}`) }
   if (filters.search) {
-    params.push(`%${filters.search}%`)
-    conditions.push(`(COALESCE(sc.school_name, p.public_name, p.first_name || ' ' || p.last_name) ILIKE $${params.length} OR COALESCE(pr.training_school,'') ILIKE $${params.length})`)
+    const normalizedSearch=normalizeDirectorySearch(filters.search)
+    if(normalizedSearch){
+      params.push(`%${normalizedSearch}%`)
+      conditions.push(`(${normalizedDirectorySql("COALESCE(sc.school_name, NULLIF(p.public_name,''), p.first_name || ' ' || p.last_name)")} LIKE $${params.length} OR ${normalizedDirectorySql("COALESCE(pr.training_school,'')")} LIKE $${params.length})`)
+    }
   }
   return query<PublicDirectoryRow>(
     `SELECT m.id, m.member_type,
