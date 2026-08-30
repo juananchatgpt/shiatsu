@@ -1,6 +1,6 @@
 # APSE · Gestión de socios
 
-## Estado 2026-08-29
+## Estado 2026-08-30
 
 - Aplicación fase 1 construida desde SaaS Factory Postgres.
 - PRP activo: `../../PRPs/PRP-001-gestion-socios-apse.md`.
@@ -55,6 +55,10 @@
 - Los filtros del widget permanecen fijos en la parte superior mientras se recorren las fichas.
 - La búsqueda pública por nombre o escuela ignora mayúsculas, minúsculas y signos diacríticos
   (tildes, diéresis y `ñ`) tanto en el directorio completo como en el widget.
+- Estado consolidado al cierre: home de login, cabecera pública sin menú, logo enlazado a la web
+  principal, eventos con lista/calendario, guía visual del cliente aplicada y widget de directorio
+  con filtros fijos, provincias válidas y tres fichas por fila en escritorio. Todo está publicado en
+  GitHub; cada cambio requiere después despliegue manual en Easypanel.
 - Corregido el primer alta posterior a la importación: la numeración continúa la serie histórica
   solo numérica desde 934 y la secuencia queda sincronizada con el máximo existente.
 - Las ubicaciones indicadas en el alta se conservan tanto en la parte privada como en la ficha
