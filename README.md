@@ -46,11 +46,11 @@ npm run wp:import
 
 ```html
 <script async
-  src="https://gestion.shiatsu-apse.es/api/widgets.js"
+  src="https://shiatsu.alza-t.com/api/widgets.js?v=20260830"
   data-apse-widget="directory"></script>
 ```
 
-Para eventos, usar `data-apse-widget="events"`. La URL definitiva se sustituirá al desplegar.
+Para eventos, usar `data-apse-widget="events"`.
 
 ## Estado
 

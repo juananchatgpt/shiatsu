@@ -92,10 +92,15 @@
   PostgreSQL. Juanan desplegó después el contenedor y se verificaron en producción `/api/health`,
   registro, directorio, eventos y ambos embeds con respuesta 200; los chunks servidos coinciden con
   el build local.
-- Los widgets funcionan actualmente en cualquier web: `widgets.js` y las APIs públicas responden
-  con `Access-Control-Allow-Origin: *`, y los embeds no envían `X-Frame-Options` ni una política
-  `frame-ancestors`. `WIDGET_ALLOWED_ORIGINS` existe en el entorno de ejemplo pero el código no lo
-  aplica; restringir dominios requeriría una adaptación posterior.
+- Incidencia detectada el 2026-08-30 en `https://alza-t.com/prueba`: `widgets.js` construía el iframe
+  con `https://0.0.0.0:80` porque tomaba el origen interno de la petición tras el proxy de Easypanel.
+  Se corrigió para obtener siempre el origen público desde `document.currentScript.src` y se añadió
+  una prueba de regresión. Los códigos de integración usan un parámetro de versión para evitar la
+  copia anterior del script en caché.
+- Fuera de esa incidencia, los widgets admiten cualquier web: `widgets.js` y las APIs públicas
+  responden con `Access-Control-Allow-Origin: *`, y los embeds no envían `X-Frame-Options` ni una
+  política `frame-ancestors`. `WIDGET_ALLOWED_ORIGINS` existe en el entorno de ejemplo pero el código
+  no lo aplica; restringir dominios requeriría una adaptación posterior.
 - Cambiar una contraseña desde administración cierra las sesiones e invalida recuperaciones abiertas.
   Desactivar un administrador cierra sus sesiones; no se permite desactivar la cuenta propia ni dejar
   el sistema sin un administrador activo.
