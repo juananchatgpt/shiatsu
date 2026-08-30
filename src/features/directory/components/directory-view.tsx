@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 export function DirectoryView({rows,compact=false}:{rows:PublicDirectoryRow[];compact?:boolean}){
-  return <div className={`grid gap-5 ${compact?'sm:grid-cols-2':'md:grid-cols-2 xl:grid-cols-3'}`}>
+  return <div className={`grid gap-5 ${compact?'sm:grid-cols-2 md:grid-cols-3':'md:grid-cols-2 xl:grid-cols-3'}`}>
     {rows.map(item=><article key={item.id} className="group overflow-hidden rounded-lg border border-stone-200/80 bg-white shadow-[0_14px_45px_rgba(31,52,44,.06)] transition duration-300 hover:-translate-y-1 hover:border-[#538a54]/40 hover:shadow-[0_22px_55px_rgba(31,52,44,.12)]">
       <Link href={`/directorio/${item.id}`} target={compact?'_blank':undefined} rel={compact?'noreferrer':undefined} className="block h-full p-6">
         <div className="flex items-center gap-5">
