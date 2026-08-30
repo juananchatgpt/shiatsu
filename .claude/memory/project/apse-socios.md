@@ -107,8 +107,8 @@
   el build. Si el panel no está autenticado, se puede construir una imagen desde `git archive` por
   SSH y actualizar únicamente la imagen del servicio, conservando su configuración y verificando
   después la web y `/api/health`.
-- Preparado el borrador de presentación al cliente con el alcance de fase 1, validaciones, migración,
-  pendientes y enlaces de revisión. Está guardado en
+- Actualizado el borrador de presentación al cliente con el flujo de pre-registro, perfil completo,
+  pago confirmado, avisos desactivados, alcance de fase 1 y enlaces de revisión. Está guardado en
   `../reference/correo-cliente-estado-fase-1-2026-08-28.md` y no se ha enviado.
 - Juanan enviará personalmente el correo de presentación al cliente y avisará después. La aplicación
   y el agente no deben enviarlo ni iniciar comunicaciones por su cuenta.
