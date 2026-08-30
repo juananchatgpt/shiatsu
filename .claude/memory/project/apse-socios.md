@@ -49,6 +49,8 @@
   provincia; al elegir profesionales o escuelas se recalcula para ese tipo.
 - Los filtros del directorio, tanto en la página pública como en el widget, siguen el orden de
   decisión solicitado por el cliente: tipo de perfil primero, nombre después y provincia al final.
+  El widget también carga únicamente las provincias que tienen perfiles públicos para el tipo
+  seleccionado y descarta cualquier provincia que ya no sea válida.
 - Corregido el primer alta posterior a la importación: la numeración continúa la serie histórica
   solo numérica desde 934 y la secuencia queda sincronizada con el máximo existente.
 - Las ubicaciones indicadas en el alta se conservan tanto en la parte privada como en la ficha
