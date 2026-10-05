@@ -41,16 +41,22 @@ test('el alta manual de escuela exige nombre del centro',()=>{
 })
 
 test('el pre-registro solo considera completo el perfil con datos privados obligatorios',()=>{
-  const complete={firstName:'Ana',lastName:'Pérez',identityDocument:'12345678A',phone:'600000000',address:'Calle Mayor 1',postalCode:'45001',city:'Toledo',province:'Toledo',schoolOrigin:'Escuela Centro',directoryOptIn:false}
+  const complete={firstName:'Ana',lastName:'Pérez',identityDocument:'12345678A',phone:'600000000',address:'Calle Mayor 1',postalCode:'45001',city:'Toledo',province:'Toledo',schoolOrigin:'Escuela Centro',bio:'Profesional formada en shiatsu y terapias manuales.',directoryOptIn:false}
   assert.deepEqual(getProfileCompletionIssues('student',complete),[])
   assert.ok(getProfileCompletionIssues('student',{...complete,address:''}).includes('dirección'))
 })
 
 test('si se solicita directorio también son obligatorios los datos públicos esenciales',()=>{
-  const base={firstName:'Ana',lastName:'Pérez',identityDocument:'12345678A',phone:'600000000',address:'Calle Mayor 1',postalCode:'45001',city:'Toledo',province:'Toledo',trainingSchool:'APSE',qualificationSummary:'Formación completa'}
+  const base={firstName:'Ana',lastName:'Pérez',identityDocument:'12345678A',phone:'600000000',address:'Calle Mayor 1',postalCode:'45001',city:'Toledo',province:'Toledo',bio:'Profesional formada en shiatsu y terapias manuales.',trainingSchool:'APSE',qualificationSummary:'Formación completa'}
   const issues=getProfileCompletionIssues('professional',{...base,directoryOptIn:true})
   assert.ok(issues.includes('nombre público'))
   assert.equal(getProfileCompletionIssues('professional',{...base,directoryOptIn:false}).length,0)
+})
+
+test('la dirección pública requiere autorización expresa para completar sus datos',()=>{
+  const base={firstName:'Ana',lastName:'Pérez',identityDocument:'12345678A',phone:'600000000',address:'Calle Mayor 1',postalCode:'45001',city:'Toledo',province:'Toledo',bio:'Profesional formada en shiatsu y terapias manuales.',trainingSchool:'APSE',qualificationSummary:'Formación completa',directoryOptIn:true,publicName:'Ana Shiatsu',publicEmail:'ana@example.com',publicPhone:'600000000'}
+  assert.equal(getProfileCompletionIssues('professional',{...base,publicAddressOptIn:false}).length,0)
+  assert.ok(getProfileCompletionIssues('professional',{...base,publicAddressOptIn:true}).includes('dirección pública'))
 })
 
 test('el borrado administrativo exige confirmación literal',()=>{

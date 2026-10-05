@@ -18,7 +18,7 @@ export const eventStatusLabels: Record<EventStatus, string> = {
 }
 
 export const FEES_CENTS: Record<MemberType, number> = {
-  student: 4000, professional: 9500, school: 9500,
+  student: 4000, professional: 10000, school: 12000,
 }
 
 export const SPANISH_PROVINCES = [

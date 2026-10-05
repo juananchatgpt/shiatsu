@@ -27,7 +27,7 @@ export default async function DirectoryDetailPage({params}:{params:Promise<{id:s
   ].filter((item):item is [string,string]=>Boolean(item[1]))
   return <><SiteHeader/><main className="pb-16">
     <section className="relative overflow-hidden border-b border-stone-200 bg-emerald-950 text-white">
-      <div className="absolute inset-0 opacity-30">{member.member_type==='school'&&member.has_cover?<Image unoptimized fill priority src={`/api/profile-covers/${member.id}?v=${member.cover_version??'1'}`} alt="" className="object-cover"/>:<div className="h-full bg-[radial-gradient(circle_at_20%_20%,rgba(199,167,99,.7),transparent_30%),radial-gradient(circle_at_85%_0%,rgba(184,102,79,.55),transparent_28%)]"/>}</div>
+      <div className="absolute inset-0 opacity-30"><div className="h-full bg-[radial-gradient(circle_at_20%_20%,rgba(199,167,99,.7),transparent_30%),radial-gradient(circle_at_85%_0%,rgba(184,102,79,.55),transparent_28%)]"/></div>
       <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/75 to-emerald-950/25"/>
       <div className="apse-container relative py-10 sm:py-16"><Link href="/directorio" className="text-sm font-semibold text-white/80 hover:text-white">← Volver al directorio</Link><div className="mt-12 flex flex-col gap-6 sm:flex-row sm:items-end">
         {member.has_photo?<Image unoptimized src={`/api/profile-photos/${member.id}?v=${member.photo_version??'1'}`} alt={`Imagen de ${member.name}`} width={144} height={144} className="h-32 w-32 rounded-lg border-4 border-white/90 bg-white object-cover shadow-xl sm:h-36 sm:w-36"/>:<div className="grid h-32 w-32 place-items-center rounded-lg border-4 border-white/80 bg-emerald-50 text-5xl font-semibold text-emerald-950 shadow-xl sm:h-36 sm:w-36">{member.name.slice(0,1).toUpperCase()}</div>}
@@ -39,6 +39,7 @@ export default async function DirectoryDetailPage({params}:{params:Promise<{id:s
         {description&&<Section title={member.member_type==='school'?'Sobre el centro':'Sobre mí'}><p className="whitespace-pre-line text-base leading-8 text-stone-700">{description}</p></Section>}
         {member.member_type==='professional'&&(member.training_school||member.qualification_summary)&&<Section title="Formación en Shiatsu"><Details items={[["Escuela de formación",member.training_school],["Titulación y formación",member.qualification_summary]]}/></Section>}
         {member.member_type==='professional'&&(member.teaching_level||member.teaching_schools||member.teaching_since_year)&&<Section title="Docencia"><Details items={[["Nivel de enseñanza",member.teaching_level],["Escuelas donde imparte",member.teaching_schools],["Inicio de docencia",member.teaching_since_year?.toString()??null]]}/></Section>}
+        {member.member_type==='professional'&&member.home_visit_available&&<Section title="Asistencia a domicilio"><Details items={[["Servicio",'Sí'],["Observaciones",member.home_visit_notes]]}/></Section>}
         {member.member_type==='school'&&(member.program_summary||member.teachers_summary||member.direction_experience_summary)&&<Section title="Formación del centro"><Details items={[["Programa formativo",member.program_summary],["Equipo docente",member.teachers_summary],["Experiencia de la dirección",member.direction_experience_summary]]}/></Section>}
       </div>
       <aside className="space-y-5 lg:sticky lg:top-6 lg:self-start">

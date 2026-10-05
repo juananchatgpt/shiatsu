@@ -4,6 +4,21 @@
 > **Date**: 2026-08-26
 > **Project**: 21. Shiatsu — APSE
 
+> **Update 2026-10-05 · solicitud vigente**: tarifas de alta de 40 € alumno, 100 € profesional y
+> 120 € escuela; registro profesional/escuela con documentación inicial persistida en la ficha;
+> dirección privada para la revista separada de la pública del directorio; bio y datos privados
+> obligatorios; email de acceso editable por el socio con reautenticación; preguntas Sí/No para
+> seguro y directorio; asistencia a domicilio para profesionales; escuela de procedencia para
+> alumnos; notas internas solo para administración; exportaciones CSV desde Socios; retirada de
+> portada horizontal y del botón de confirmación de pago; activación al completar el perfil
+> obligatorio. La migración es `010_member_profile_updates.sql`; no se aplica automáticamente a
+> ninguna base de datos externa.
+
+> **Update 2026-10-05 · privacidad de direcciones**: la dirección privada es exclusivamente para
+> la revista y nunca se expone en endpoints, listados o fichas públicas. La dirección postal del
+> directorio requiere el consentimiento independiente `public_address_opt_in`; sin él también se
+> ocultan sus componentes de localidad y provincia.
+
 > **Update 2026-08-27**: el directorio ya usa tarjetas-resumen y fichas individuales; se añadieron
 > portadas, tipo de centro e idiomas para escuelas, y la administración permite editar el perfil
 > completo y sus imágenes. Migración `005` aplicada y validada sin envíos de correo.

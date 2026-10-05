@@ -153,17 +153,16 @@
 ## Decisiones
 
 - Auth propia + Postgres directo + SMTP + Easypanel.
-- Cuotas informativas: alumno 40 € y profesional/escuela 95 €. El seguro es solo una casilla de
+- Cuotas informativas vigentes: alumno 40 €, profesional 100 € y escuela 120 €. El seguro es solo una casilla de
   interés y no tiene precio asociado ni incrementa la cuota en fase 1.
-- La cuota de escuela de 95 € queda confirmada para esta fase.
 - Los documentos privados se almacenan dentro de PostgreSQL como `BYTEA`, con acceso exclusivo del
   propietario/administrador, límite de 5 MB y descarga `no-store`; entran en el backup de PostgreSQL.
 - Las fotos usan `membership_profile_photos`; solo profesionales/escuelas pueden subir nuevas y la
   ruta pública exige socio activo, consentimiento de directorio y tipo profesional/escuela.
 - Las portadas usan `membership_cover_images`; son exclusivas de escuelas y aplican las mismas reglas
   de privacidad pública que las fotos.
-- Fase 1 solo registra manualmente la confirmación del primer pago; no cobra ni gestiona impagos,
-  renovaciones o GoCardless. Las campañas masivas siguen fuera de alcance.
+- El cobro y la gestión de impagos, renovaciones o GoCardless siguen fuera de alcance. Las campañas
+  masivas siguen fuera de alcance y el botón de confirmación de pago ya no forma parte de la ficha.
 - Las altas manuales administrativas crean una contraseña inicial y no envían ningún correo. Si el
   estado inicial es activo y no se indica número, la aplicación asigna el siguiente número APSE.
 - Los eventos creados por administración se vinculan siempre a un profesional o escuela activos y
@@ -183,3 +182,30 @@
   `npm run wp:import`, que genera un informe ignorado por Git.
 - Instantánea previa conservada en el esquema PostgreSQL `backup_pre_wp_import_20260826`.
 - Commits de cierre: `ec01a06`, `bd1284b`, `6ed493b`, `173dbe9`, `3f0dcfb`, `fe3b475`.
+
+## Cambios solicitados 2026-10-05
+
+- La nueva tarifa de alta es alumno 40 €, profesional 100 € y escuela 120 €. Se refleja en la
+  pantalla de registro, en `FEES_CENTS`, en el esquema nuevo y en la migración `010` para la base
+  existente; no se reescriben las cuotas históricas guardadas en cada membresía.
+- El alta y la ficha separan la dirección privada para recibir la revista anual de la dirección
+  pública del directorio. Nombre, apellidos, teléfono, email, dirección privada completa y bio son
+  obligatorios en el formulario de registro. El alumno guarda también la escuela de procedencia.
+- El socio puede cambiar el email de acceso desde su perfil repitiendo el email nuevo y aportando
+  la contraseña actual. Las opciones de seguro y de aparición en el directorio se muestran como
+  preguntas Sí/No; los profesionales tienen asistencia a domicilio y observaciones.
+- Las altas de profesional y escuela aceptan el documento inicial en el propio formulario y lo
+  guardan en `membership_documents` como `registration_document` dentro de PostgreSQL, con límite
+  de 5 MB y acceso privado para socio/administración. Se mantiene la documentación adicional.
+- Administración puede descargar emails, direcciones o toda la información mediante la exportación
+  CSV protegida por `requireAdmin`. Las notas internas solo aparecen en la ficha/exportación de
+  administración. Se retiró el botón de confirmación de pago y la activación del pre-registro
+  depende del perfil obligatorio completo.
+- Se retiró la portada horizontal de las fichas de escuela y se sustituyó el logo visible por la
+  imagen remota de `shiatsu.ochoesferas.com`. No se ha desplegado ni aplicado la migración a una
+  base de datos externa.
+- La dirección pública del directorio tiene ahora el consentimiento independiente
+  `public_address_opt_in`. Si está desmarcado, las consultas públicas ocultan calle, código postal,
+  municipio y provincia, y la dirección privada de revista nunca se usa en consultas públicas.
+  La migración `011_public_address_authorization.sql` deja los registros existentes sin permiso
+  hasta que el socio o administración lo autoricen expresamente.

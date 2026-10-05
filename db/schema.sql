@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS member_profiles (
   membership_id UUID PRIMARY KEY REFERENCES memberships(id) ON DELETE CASCADE,
   first_name TEXT NOT NULL, last_name TEXT NOT NULL DEFAULT '', identity_document TEXT, phone TEXT, secondary_phone TEXT,
   address TEXT, postal_code TEXT, city TEXT, province TEXT, public_name TEXT, public_email TEXT, public_phone TEXT,
-  public_address TEXT, public_postal_code TEXT, public_city TEXT, public_province TEXT, website TEXT, bio TEXT,
+  public_address TEXT, public_address_opt_in BOOLEAN NOT NULL DEFAULT false, public_postal_code TEXT, public_city TEXT, public_province TEXT, website TEXT, bio TEXT,
   facebook_url TEXT, instagram_url TEXT, youtube_url TEXT, twitter_url TEXT, photo_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS student_profiles (
 CREATE TABLE IF NOT EXISTS professional_profiles (
   membership_id UUID PRIMARY KEY REFERENCES memberships(id) ON DELETE CASCADE,
   training_school TEXT, qualification_summary TEXT, teaching_level TEXT, teaching_schools TEXT,
-  teaching_since_year INTEGER CHECK (teaching_since_year IS NULL OR teaching_since_year BETWEEN 1900 AND 2100)
+  teaching_since_year INTEGER CHECK (teaching_since_year IS NULL OR teaching_since_year BETWEEN 1900 AND 2100),
+  home_visit_available BOOLEAN NOT NULL DEFAULT false, home_visit_notes TEXT
 );
 CREATE TABLE IF NOT EXISTS school_profiles (
   membership_id UUID PRIMARY KEY REFERENCES memberships(id) ON DELETE CASCADE,
@@ -54,10 +55,11 @@ CREATE TABLE IF NOT EXISTS school_profiles (
 );
 CREATE TABLE IF NOT EXISTS membership_documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(), membership_id UUID NOT NULL REFERENCES memberships(id) ON DELETE CASCADE,
-  kind TEXT NOT NULL CHECK (kind IN ('professional_qualification', 'school_program', 'school_teachers', 'school_direction', 'other')),
-  original_name TEXT NOT NULL, storage_key TEXT NOT NULL, mime_type TEXT NOT NULL, size_bytes BIGINT NOT NULL CHECK (size_bytes >= 0),
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'valid', 'rejected')),
-  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL, reviewed_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  kind TEXT NOT NULL CHECK (kind IN ('professional_qualification', 'school_program', 'school_teachers', 'school_direction', 'registration_document', 'other')),
+  original_name TEXT NOT NULL, storage_key TEXT, mime_type TEXT NOT NULL, size_bytes BIGINT NOT NULL CHECK (size_bytes >= 0),
+  content BYTEA, status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'valid', 'rejected')),
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL, reviewed_at TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (content IS NULL OR octet_length(content) <= 5242880)
 );
 CREATE TABLE IF NOT EXISTS membership_profile_photos (
   membership_id UUID PRIMARY KEY REFERENCES memberships(id) ON DELETE CASCADE,
@@ -125,7 +127,7 @@ CREATE TABLE IF NOT EXISTS request_rate_limits (
   key TEXT PRIMARY KEY, count INTEGER NOT NULL DEFAULT 1, expires_at TIMESTAMPTZ NOT NULL
 );
 INSERT INTO app_settings (key, value) VALUES
-  ('fees', '{"student":4000,"professional":9500,"school":9500,"insurance":0}'::jsonb),
+  ('fees', '{"student":4000,"professional":10000,"school":12000,"insurance":0}'::jsonb),
   ('communications', '{"bulkSendingEnabled":false}'::jsonb)
 ON CONFLICT (key) DO NOTHING;
 

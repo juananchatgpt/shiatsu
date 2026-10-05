@@ -10,15 +10,15 @@ export interface MembershipDetail {
   rejection_reason: string | null; first_name: string; last_name: string; identity_document: string | null
   phone: string | null; secondary_phone: string | null; address: string | null; postal_code: string | null
   city: string | null; province: string | null; public_name: string | null; public_email: string | null
-  public_phone: string | null; public_address: string | null; public_postal_code: string | null
+  public_phone: string | null; public_address: string | null; public_address_opt_in: boolean; public_postal_code: string | null
   public_city: string | null; public_province: string | null; website: string | null; bio: string | null
   facebook_url: string | null; instagram_url: string | null; youtube_url: string | null; twitter_url: string | null
   school_origin: string | null; training_school: string | null; school_name: string | null
   has_photo:boolean
   qualification_summary:string|null; teaching_level:string|null; teaching_schools:string|null; teaching_since_year:number|null
+  home_visit_available:boolean; home_visit_notes:string|null
   school_description:string|null; program_summary:string|null
   teachers_summary:string|null; direction_experience_summary:string|null; center_type:string|null; languages:string|null
-  has_cover:boolean
   created_at: string; updated_at: string
 }
 
@@ -27,13 +27,12 @@ const DETAIL_SELECT = `
     m.insurance_selected, m.base_fee_cents, m.insurance_fee_cents, m.anniversary_date::text AS anniversary_date,
     m.directory_opt_in, m.rejection_reason,m.approved_at::text,m.profile_completed_at::text,m.payment_confirmed_at::text, p.first_name, p.last_name, p.identity_document,
     p.phone, p.secondary_phone, p.address, p.postal_code, p.city, p.province,
-    p.public_name, p.public_email, p.public_phone, p.public_address, p.public_postal_code,
+    p.public_name, p.public_email, p.public_phone, p.public_address, p.public_address_opt_in, p.public_postal_code,
     p.public_city, p.public_province, p.website, p.bio, p.facebook_url, p.instagram_url, p.youtube_url,p.twitter_url,
-    st.school_origin, pr.training_school, pr.qualification_summary,pr.teaching_level,pr.teaching_schools,pr.teaching_since_year,
+    st.school_origin, pr.training_school, pr.qualification_summary,pr.teaching_level,pr.teaching_schools,pr.teaching_since_year,pr.home_visit_available,pr.home_visit_notes,
     sc.school_name, sc.description AS school_description,
     sc.program_summary,sc.teachers_summary,sc.direction_experience_summary,sc.center_type,sc.languages,
     EXISTS(SELECT 1 FROM membership_profile_photos ph WHERE ph.membership_id=m.id) has_photo,m.created_at, m.updated_at
-    ,EXISTS(SELECT 1 FROM membership_cover_images ci WHERE ci.membership_id=m.id) has_cover
   FROM memberships m JOIN users u ON u.id = m.user_id
   JOIN member_profiles p ON p.membership_id = m.id
   LEFT JOIN student_profiles st ON st.membership_id = m.id
@@ -100,7 +99,7 @@ export async function listPublicDirectory(filters: { type?: string; province?: s
   if (filters.type && ['professional', 'school'].includes(filters.type)) {
     params.push(filters.type); conditions.push(`m.member_type = $${params.length}`)
   }
-  if (filters.province) { params.push(filters.province); conditions.push(`p.public_province = $${params.length}`) }
+  if (filters.province) { params.push(filters.province); conditions.push(`p.public_address_opt_in=true AND p.public_province = $${params.length}`) }
   if (filters.search) {
     const normalizedSearch=normalizeDirectorySearch(filters.search)
     if(normalizedSearch){
@@ -111,7 +110,8 @@ export async function listPublicDirectory(filters: { type?: string; province?: s
   return query<PublicDirectoryRow>(
     `SELECT m.id, m.member_type,
       COALESCE(sc.school_name, NULLIF(p.public_name,''), p.first_name || ' ' || p.last_name) AS name,
-      p.public_city, p.public_province,
+      CASE WHEN p.public_address_opt_in THEN p.public_city ELSE NULL END public_city,
+      CASE WHEN p.public_address_opt_in THEN p.public_province ELSE NULL END public_province,
       (ph.membership_id IS NOT NULL) has_photo,EXTRACT(EPOCH FROM ph.updated_at)::bigint::text photo_version,
       sc.center_type
      FROM memberships m JOIN member_profiles p ON p.membership_id=m.id
@@ -122,7 +122,7 @@ export async function listPublicDirectory(filters: { type?: string; province?: s
   )
 }
 
-export async function listPublicDirectoryProvinces(type?:string){const params:unknown[]=[];const conditions=["m.status='active'",'m.directory_opt_in=true',"m.member_type IN ('professional','school')","NULLIF(BTRIM(p.public_province),'') IS NOT NULL"]
+export async function listPublicDirectoryProvinces(type?:string){const params:unknown[]=[];const conditions=["m.status='active'",'m.directory_opt_in=true','p.public_address_opt_in=true',"m.member_type IN ('professional','school')","NULLIF(BTRIM(p.public_province),'') IS NOT NULL"]
   if(type&&['professional','school'].includes(type)){params.push(type);conditions.push(`m.member_type=$${params.length}`)}
   const rows=await query<{province:string}>(`SELECT DISTINCT BTRIM(p.public_province) province FROM memberships m JOIN member_profiles p ON p.membership_id=m.id WHERE ${conditions.join(' AND ')} ORDER BY province`,params)
   return rows.map(row=>row.province)}
@@ -131,23 +131,27 @@ export interface PublicDirectoryDetail extends PublicDirectoryRow {
   public_email:string|null;public_phone:string|null;public_address:string|null;public_postal_code:string|null
   website:string|null;bio:string|null;facebook_url:string|null;instagram_url:string|null;youtube_url:string|null;twitter_url:string|null
   training_school:string|null;qualification_summary:string|null;teaching_level:string|null;teaching_schools:string|null;teaching_since_year:number|null
+  home_visit_available:boolean;home_visit_notes:string|null
   school_description:string|null;program_summary:string|null;teachers_summary:string|null;direction_experience_summary:string|null;languages:string|null
-  has_cover:boolean;cover_version:string|null
 }
 
 export async function getPublicDirectoryMember(id:string){
   const rows=await query<PublicDirectoryDetail>(`SELECT m.id,m.member_type,
     COALESCE(sc.school_name,NULLIF(p.public_name,''),p.first_name||' '||p.last_name) name,
-    p.public_email,p.public_phone,p.public_address,p.public_postal_code,p.public_city,p.public_province,p.website,p.bio,
+    p.public_email,p.public_phone,
+    CASE WHEN p.public_address_opt_in THEN p.public_address ELSE NULL END public_address,
+    CASE WHEN p.public_address_opt_in THEN p.public_postal_code ELSE NULL END public_postal_code,
+    CASE WHEN p.public_address_opt_in THEN p.public_city ELSE NULL END public_city,
+    CASE WHEN p.public_address_opt_in THEN p.public_province ELSE NULL END public_province,
+    p.website,p.bio,
     p.facebook_url,p.instagram_url,p.youtube_url,p.twitter_url,
     (ph.membership_id IS NOT NULL) has_photo,EXTRACT(EPOCH FROM ph.updated_at)::bigint::text photo_version,
     pr.training_school,CASE WHEN pr.qualification_summary ~* '\\.(pdf|jpe?g|png)$' THEN NULL ELSE pr.qualification_summary END qualification_summary,
-    pr.teaching_level,pr.teaching_schools,pr.teaching_since_year,
-    sc.description school_description,sc.program_summary,sc.teachers_summary,sc.direction_experience_summary,sc.center_type,sc.languages,
-    (ci.membership_id IS NOT NULL) has_cover,EXTRACT(EPOCH FROM ci.updated_at)::bigint::text cover_version
+    pr.teaching_level,pr.teaching_schools,pr.teaching_since_year,pr.home_visit_available,pr.home_visit_notes,
+    sc.description school_description,sc.program_summary,sc.teachers_summary,sc.direction_experience_summary,sc.center_type,sc.languages
     FROM memberships m JOIN member_profiles p ON p.membership_id=m.id
     LEFT JOIN professional_profiles pr ON pr.membership_id=m.id LEFT JOIN school_profiles sc ON sc.membership_id=m.id
-    LEFT JOIN membership_profile_photos ph ON ph.membership_id=m.id LEFT JOIN membership_cover_images ci ON ci.membership_id=m.id
+    LEFT JOIN membership_profile_photos ph ON ph.membership_id=m.id
     WHERE m.id=$1 AND m.status='active' AND m.directory_opt_in=true AND m.member_type IN ('professional','school') LIMIT 1`,[id])
   return rows[0]??null
 }

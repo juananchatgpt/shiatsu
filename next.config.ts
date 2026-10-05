@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
     mcpServer: true,
     serverActions: { bodySizeLimit: '6mb' },
   },
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: 'shiatsu.ochoesferas.com', pathname: '/wp-content/uploads/**' }],
+  },
 }
 
 export default nextConfig

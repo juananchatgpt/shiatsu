@@ -13,9 +13,14 @@ export interface ProfileCompletionData {
   publicName?: string | null
   publicEmail?: string | null
   publicPhone?: string | null
+  publicAddress?: string | null
+  publicPostalCode?: string | null
   publicCity?: string | null
   publicProvince?: string | null
+  publicAddressOptIn?: boolean
   bio?: string | null
+  homeVisitAvailable?: boolean
+  homeVisitNotes?: string | null
   schoolOrigin?: string | null
   trainingSchool?: string | null
   qualificationSummary?: string | null
@@ -39,6 +44,7 @@ export function getProfileCompletionIssues(memberType: MemberType, data: Profile
   require(data.postalCode, 'código postal')
   require(data.city, 'municipio')
   require(data.province, 'provincia')
+  require(data.bio, 'biografía o presentación')
 
   if (memberType === 'student') require(data.schoolOrigin, 'escuela de procedencia')
   if (memberType === 'professional') {
@@ -56,9 +62,12 @@ export function getProfileCompletionIssues(memberType: MemberType, data: Profile
     require(data.publicName, 'nombre público')
     require(data.publicEmail, 'email público')
     require(data.publicPhone, 'teléfono público')
-    require(data.publicCity, 'municipio público')
-    require(data.publicProvince, 'provincia pública')
-    require(data.bio, 'presentación pública')
+    if (data.publicAddressOptIn) {
+      require(data.publicAddress, 'dirección pública')
+      require(data.publicPostalCode, 'código postal público')
+      require(data.publicCity, 'municipio público')
+      require(data.publicProvince, 'provincia pública')
+    }
   }
 
   return issues

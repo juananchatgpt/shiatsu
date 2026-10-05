@@ -5,9 +5,9 @@ import { requireAdmin,requireUser,getMembershipContext } from '@/lib/access'
 import { withTransaction } from '@/lib/db'
 import type { ActionState } from './memberships'
 
-const ALLOWED_MIME=new Set(['application/pdf','image/jpeg','image/png','image/webp'])
+const ALLOWED_MIME=new Set(['application/pdf','image/jpeg','image/png','image/webp','application/zip','application/x-zip-compressed','application/x-rar-compressed','application/vnd.rar','application/octet-stream'])
 const MAX_BYTES=5*1024*1024
-const ALLOWED_KINDS={professional:new Set(['professional_qualification','other']),school:new Set(['school_program','school_teachers','school_direction','other'])}
+const ALLOWED_KINDS={professional:new Set(['professional_qualification','registration_document','other']),school:new Set(['school_program','school_teachers','school_direction','registration_document','other'])}
 
 export async function uploadMembershipDocument(_prev:ActionState|null,form:FormData):Promise<ActionState>{
   const user=await requireUser();const membership=await getMembershipContext(user.id)
@@ -15,7 +15,9 @@ export async function uploadMembershipDocument(_prev:ActionState|null,form:FormD
   const file=form.get('document');const kind=String(form.get('kind')??'')
   if(!(file instanceof File)||file.size===0)return{error:'Selecciona un archivo'}
   if(!ALLOWED_KINDS[membership.member_type].has(kind))return{error:'Tipo de documento no válido'}
-  if(!ALLOWED_MIME.has(file.type))return{error:'Solo se admiten PDF, JPG, PNG o WebP'}
+  const extension=file.name.toLowerCase().split('.').pop()??''
+  const archive=extension==='zip'||extension==='rar'
+  if((!ALLOWED_MIME.has(file.type)||file.type==='application/octet-stream')&&!archive)return{error:'Solo se admiten PDF, JPG, PNG, WebP, ZIP o RAR'}
   if(file.size>MAX_BYTES)return{error:'El archivo no puede superar 5 MB'}
   const content=Buffer.from(await file.arrayBuffer())
   await withTransaction(async tx=>{
