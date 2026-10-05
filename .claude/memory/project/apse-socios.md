@@ -1,6 +1,6 @@
 # APSE · Gestión de socios
 
-## Estado 2026-08-30
+## Estado 2026-10-05
 
 - Aplicación fase 1 construida desde SaaS Factory Postgres.
 - PRP activo: `../../PRPs/PRP-001-gestion-socios-apse.md`.
@@ -213,3 +213,24 @@
   municipio y provincia, y la dirección privada de revista nunca se usa en consultas públicas.
   La migración `011_public_address_authorization.sql` deja los registros existentes sin permiso
   hasta que el socio o administración lo autoricen expresamente.
+- Los formularios públicos de alta se compararon con las páginas antiguas reales. Alumno muestra
+  nombre, apellidos, escuela de procedencia, documento de identidad, teléfono, email, contraseña y
+  privacidad; profesional muestra nombre, apellidos, teléfono, email, contraseña, titulación PDF
+  y privacidad; escuela muestra tipo de centro, DNI/NIE del registrador, nombre, teléfono, email,
+  contraseña, documentación ZIP/RAR y privacidad. Dirección privada, biografía, seguro, directorio,
+  atención a domicilio y demás campos ampliados se completan después desde la ficha.
+- Una escuela puede iniciar el alta sin introducir todavía al profesional responsable ni el resto
+  de su ficha. La vinculación y los datos ampliados se completan posteriormente desde administración
+  o el área privada; el documento de alta sigue guardándose en PostgreSQL.
+- La atención a domicilio significa que el terapeuta se desplaza al domicilio de la persona
+  atendida. Se refleja así en las fichas de socio, administración, directorio y exportación.
+- El seguro solo corresponde a socios profesionales. Se ocultó para escuelas en las fichas y altas,
+  las acciones de servidor lo fuerzan a `false` para cualquier otro tipo y la migración
+  `012_professional_insurance_only.sql` añadió la restricción PostgreSQL correspondiente. Consulta
+  real posterior: cero escuelas con seguro y cero cuotas de seguro en la base.
+- Migraciones `010`, `011` y `012` aplicadas y verificadas con `npm run db:verify`. El código quedó
+  validado con 21 pruebas, `npm run typecheck`, `npm run lint` y `npm run build`.
+- Los cambios se subieron a `origin/main` en los commits `c76f8ba` (formularios públicos reducidos)
+  y `ba76f08` (seguro profesional y atención a domicilio). Juanan realiza el deploy manual; no se
+  ha desplegado desde el agente. El archivo preexistente `docs/CAMBIOS-28082026.txt` permanece sin
+  versionar y no se incluyó en los commits.
