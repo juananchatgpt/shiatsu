@@ -19,6 +19,10 @@
 > públicos, seguro, directorio, asistencia a domicilio y demás ampliaciones se completan después
 > desde la ficha; siguen siendo parte de la información de perfil y de sus reglas de finalización.
 
+> **Update 2026-10-05 · seguro y atención a domicilio**: el seguro solo se asocia a socios
+> profesionales; una cuenta de escuela no tiene seguro propio. La asistencia a domicilio significa
+> que el terapeuta se desplaza al domicilio de la persona atendida.
+
 > **Update 2026-10-05 · privacidad de direcciones**: la dirección privada es exclusivamente para
 > la revista y nunca se expone en endpoints, listados o fichas públicas. La dirección postal del
 > directorio requiere el consentimiento independiente `public_address_opt_in`; sin él también se
@@ -104,8 +108,10 @@ sistema, reducir duplicidades y publicar directorio y eventos en la nueva web co
 - Profesional: **95 € anuales**.
 - Seguro para profesional: casilla de interés, sin precio asociado en la fase 1.
 - Escuela: **95 € anuales provisionalmente**, pendiente de revisión antes de activar pagos.
-- Seguro para escuela: casilla de interés, sin precio asociado en la fase 1.
-- El seguro es un check en el alta; no incrementa la cuota y no es una póliza ni un flujo documental separado.
+- El seguro solo se ofrece a socios profesionales; las escuelas no tienen seguro propio. Si una
+  escuela está formada por socios profesionales, cada uno gestiona su seguro en su propia ficha.
+- El seguro es una casilla de interés del profesional; no incrementa la cuota y no es una póliza ni
+  un flujo documental separado en la fase 1.
 - Cada alta tendrá su propia fecha de aniversario.
 - La fase 1 registra únicamente la confirmación manual del primer pago por Secretaría. No cobra,
   no controla impagos o renovaciones y no integra GoCardless.

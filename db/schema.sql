@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS memberships (
   approved_at TIMESTAMPTZ, profile_completed_at TIMESTAMPTZ,
   payment_confirmed_at TIMESTAMPTZ, payment_confirmed_by UUID REFERENCES users(id) ON DELETE SET NULL,
   legacy_source_id TEXT, legacy_data JSONB,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (member_type = 'professional' OR (insurance_selected = false AND insurance_fee_cents = 0))
 );
 CREATE SEQUENCE IF NOT EXISTS member_number_seq START 1;
 CREATE TABLE IF NOT EXISTS member_profiles (

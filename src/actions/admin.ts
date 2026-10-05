@@ -132,7 +132,7 @@ export async function adminCreateMember(_prev:{ok?:boolean;error?:string;members
   try{let membershipId='';await withTransaction(async tx=>{
     let responsibleId:string|null=null;if(d.memberType==='school'&&d.responsibleMemberNumber){const responsible=await tx<{id:string}>(`SELECT id FROM memberships WHERE member_number=$1 AND member_type='professional' LIMIT 1`,[d.responsibleMemberNumber]);if(!responsible[0])throw new Error('RESPONSIBLE_NOT_FOUND');responsibleId=responsible[0].id}
     const users=await tx<{id:string}>(`INSERT INTO users(email,password_hash,full_name,role,email_verified_at) VALUES($1,$2,$3,'member',now()) RETURNING id`,[d.email,await hashPassword(d.password),`${d.firstName} ${d.lastName}`.trim()])
-    const insured=d.memberType!=='student'&&d.insuranceSelected
+    const insured=d.memberType==='professional'&&d.insuranceSelected
     const memberships=await tx<{id:string}>(`INSERT INTO memberships(user_id,member_number,member_type,status,insurance_selected,base_fee_cents,insurance_fee_cents,anniversary_date,directory_opt_in,privacy_accepted_at,approved_by,approved_at,profile_completed_at,payment_confirmed_at,payment_confirmed_by)
       VALUES($1,COALESCE(NULLIF($2,''),CASE WHEN $3='active' THEN nextval('member_number_seq')::text END),$4,$3,$5,$6,$7,NULLIF($8,'')::date,$9,now(),
       CASE WHEN $3 IN ('pre_registered','active') THEN $10 END,CASE WHEN $3 IN ('pre_registered','active') THEN now() END,
@@ -171,7 +171,7 @@ export async function adminUpdateMemberProfile(_prev:{ok?:boolean;error?:string;
     const passwordHash=d.newPassword?await hashPassword(d.newPassword):null
     await tx(`UPDATE users SET email=$1,full_name=$2,password_hash=COALESCE($3,password_hash),password_reset_required=CASE WHEN $3 IS NULL THEN password_reset_required ELSE false END,updated_at=now() WHERE id=$4`,[d.email,`${d.firstName} ${d.lastName}`.trim(),passwordHash,member.user_id])
     if(passwordHash){await tx('DELETE FROM sessions WHERE user_id=$1',[member.user_id]);await tx('DELETE FROM password_reset_tokens WHERE user_id=$1',[member.user_id])}
-    const insured=member.member_type!=='student'&&d.insuranceSelected
+    const insured=member.member_type==='professional'&&d.insuranceSelected
     await tx(`UPDATE memberships SET member_number=$1,anniversary_date=NULLIF($2,'')::date,internal_notes=$3,directory_opt_in=$4,
       insurance_selected=$5,insurance_fee_cents=$6,updated_at=now() WHERE id=$7`,[d.memberNumber||null,d.anniversaryDate||'',d.internalNotes||null,
       member.member_type!=='student'&&d.directoryOptIn,insured,0,d.membershipId])

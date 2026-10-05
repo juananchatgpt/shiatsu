@@ -153,8 +153,9 @@
 ## Decisiones
 
 - Auth propia + Postgres directo + SMTP + Easypanel.
-- Cuotas informativas vigentes: alumno 40 €, profesional 100 € y escuela 120 €. El seguro es solo una casilla de
-  interés y no tiene precio asociado ni incrementa la cuota en fase 1.
+- Cuotas informativas vigentes: alumno 40 €, profesional 100 € y escuela 120 €. El seguro solo es
+  una casilla de interés de socios profesionales; las escuelas no tienen seguro propio y cada
+  profesional que las forma gestiona el suyo. No tiene precio asociado ni incrementa la cuota en fase 1.
 - Los documentos privados se almacenan dentro de PostgreSQL como `BYTEA`, con acceso exclusivo del
   propietario/administrador, límite de 5 MB y descarga `no-store`; entran en el backup de PostgreSQL.
 - Las fotos usan `membership_profile_photos`; solo profesionales/escuelas pueden subir nuevas y la
@@ -195,8 +196,8 @@
   directorio y demás ampliaciones se completan después desde la ficha; el perfil completo sigue
   exigiendo los datos obligatorios antes de activarse.
 - El socio puede cambiar el email de acceso desde su perfil repitiendo el email nuevo y aportando
-  la contraseña actual. Las opciones de seguro y de aparición en el directorio se muestran como
-  preguntas Sí/No; los profesionales tienen asistencia a domicilio y observaciones.
+  la contraseña actual. El seguro solo se muestra a profesionales; la aparición en el directorio
+  se muestra como pregunta Sí/No; los profesionales tienen atención a domicilio y observaciones.
 - Las altas de profesional y escuela aceptan el documento inicial en el propio formulario y lo
   guardan en `membership_documents` como `registration_document` dentro de PostgreSQL, con límite
   de 5 MB y acceso privado para socio/administración. Se mantiene la documentación adicional.
