@@ -15,9 +15,14 @@ test('solo profesional o escuela activa crea eventos',()=>{
   assert.equal(canCreateEvents({membership_id:'1',member_type:'student',status:'active',directory_opt_in:false,member_number:null}),false)
   assert.equal(canCreateEvents({membership_id:'1',member_type:'school',status:'pending',directory_opt_in:false,member_number:null}),false)
 })
-test('alta de escuela exige profesional responsable',()=>{
-  const result=registrationSchema.safeParse({memberType:'school',firstName:'María',lastName:'',identityDocument:'12345678A',phone:'600000000',email:'maria@example.com',password:'segura123',privacyAccepted:'on',insuranceSelected:false,directoryOptIn:false,schoolName:'Escuela Norte',responsibleMemberNumber:''})
-  assert.equal(result.success,false)
+test('el registro público de escuela solo exige los campos históricos',()=>{
+  const result=registrationSchema.safeParse({memberType:'school',firstName:'',lastName:'',identityDocument:'12345678A',phone:'600000000',email:'escuela@example.com',password:'segura123',passwordConfirmation:'segura123',privacyAccepted:'on',registrationFileProvided:true,schoolName:'Escuela Norte',centerType:'Escuela'})
+  assert.equal(result.success,true)
+})
+
+test('el registro público de profesional deja los datos ampliados para la ficha',()=>{
+  const result=registrationSchema.safeParse({memberType:'professional',firstName:'María',lastName:'Shiatsu',phone:'600000000',email:'maria@example.com',password:'segura123',passwordConfirmation:'segura123',privacyAccepted:'on',registrationFileProvided:true})
+  assert.equal(result.success,true)
 })
 test('un evento no puede terminar antes de comenzar',()=>{
   const result=eventSchema.safeParse({title:'Curso de Shiatsu',description:'Descripción suficientemente larga para validar.',startsAt:'2026-09-20T18:00',endsAt:'2026-09-20T17:00',allDay:false,modality:'in_person',isFree:true})

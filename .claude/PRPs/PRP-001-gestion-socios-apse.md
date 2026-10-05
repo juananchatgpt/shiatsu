@@ -14,6 +14,11 @@
 > obligatorio. La migración es `010_member_profile_updates.sql`; no se aplica automáticamente a
 > ninguna base de datos externa.
 
+> **Update 2026-10-05 · formulario de alta**: los formularios públicos vuelven a mostrar solo los
+> campos de las páginas antiguas de alumno, profesional y escuela. Dirección privada, bio, datos
+> públicos, seguro, directorio, asistencia a domicilio y demás ampliaciones se completan después
+> desde la ficha; siguen siendo parte de la información de perfil y de sus reglas de finalización.
+
 > **Update 2026-10-05 · privacidad de direcciones**: la dirección privada es exclusivamente para
 > la revista y nunca se expone en endpoints, listados o fichas públicas. La dirección postal del
 > directorio requiere el consentimiento independiente `public_address_opt_in`; sin él también se
@@ -125,13 +130,16 @@ sistema, reducir duplicidades y publicar directorio y eventos en la nueva web co
 
 #### Datos mínimos de alta
 
-- **Alumno**: nombre, apellidos, escuela de procedencia, DNI/NIE, teléfono, correo, contraseña,
+- **Alumno**: nombre, apellidos, escuela de procedencia, DNI/NIE, teléfono, correo, contraseña y
   aceptación de privacidad.
-- **Profesional**: nombre, apellidos, DNI/NIE, teléfono, correo, contraseña, titulación/documento,
-  interés en seguro, consentimiento de directorio y datos públicos del perfil.
-- **Escuela**: profesional responsable, nombre, DNI/NIE del responsable, teléfono, correo,
-  contraseña, programa formativo, relación de profesionales/docentes, acreditación de dirección,
-  interés en seguro, consentimiento de directorio y datos públicos del perfil.
+- **Profesional**: nombre, apellidos, teléfono, correo, contraseña, titulación/documento y
+  aceptación de privacidad.
+- **Escuela**: tipo de centro, DNI/NIE de la persona registradora, nombre de la escuela/centro,
+  teléfono, correo, contraseña, documentación ZIP/RAR y aceptación de privacidad. La vinculación
+  con el profesional responsable y el resto de la ficha se completa posteriormente desde el área
+  privada o administración.
+- Después del alta, la ficha exige los datos privados y de perfil definidos en el flujo de
+  finalización, incluida la dirección de revista y la biografía cuando corresponda.
 - Las reglas definitivas de formatos, tamaños y conservación documental se fijarán antes de
   implementar la subida de archivos. Como referencia, el sistema antiguo admitía PDF para la
   titulación profesional y ZIP/RAR de hasta 5 MB para la documentación de escuela.

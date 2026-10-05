@@ -189,8 +189,11 @@
   pantalla de registro, en `FEES_CENTS`, en el esquema nuevo y en la migración `010` para la base
   existente; no se reescriben las cuotas históricas guardadas en cada membresía.
 - El alta y la ficha separan la dirección privada para recibir la revista anual de la dirección
-  pública del directorio. Nombre, apellidos, teléfono, email, dirección privada completa y bio son
-  obligatorios en el formulario de registro. El alumno guarda también la escuela de procedencia.
+  pública del directorio. El formulario público muestra solo los campos históricos de las páginas
+  antiguas: datos básicos y escuela de procedencia para alumnos, datos básicos y titulación para
+  profesionales, y tipo/nombre/documentación para escuelas. Dirección privada, bio, seguro,
+  directorio y demás ampliaciones se completan después desde la ficha; el perfil completo sigue
+  exigiendo los datos obligatorios antes de activarse.
 - El socio puede cambiar el email de acceso desde su perfil repitiendo el email nuevo y aportando
   la contraseña actual. Las opciones de seguro y de aparición en el directorio se muestran como
   preguntas Sí/No; los profesionales tienen asistencia a domicilio y observaciones.

@@ -55,18 +55,22 @@ export async function registerMember(_prev: ActionState | null, form: FormData):
     const created=await withTransaction(async (tx) => {
       let responsibleId: string | null = null
       if (data.memberType === 'school') {
-        const responsible = await tx<{ id: string }>(
-          `SELECT m.id FROM memberships m
-           WHERE m.member_number=$1 AND m.member_type='professional' AND m.status='active'
-           AND NOT EXISTS (SELECT 1 FROM school_profiles s WHERE s.responsible_professional_membership_id=m.id)
-           LIMIT 1`, [data.responsibleMemberNumber],
-        )
-        if (!responsible[0]) throw new Error('RESPONSIBLE_NOT_FOUND')
-        responsibleId = responsible[0].id
+        if (data.responsibleMemberNumber) {
+          const responsible = await tx<{ id: string }>(
+            `SELECT m.id FROM memberships m
+             WHERE m.member_number=$1 AND m.member_type='professional' AND m.status='active'
+             AND NOT EXISTS (SELECT 1 FROM school_profiles s WHERE s.responsible_professional_membership_id=m.id)
+             LIMIT 1`, [data.responsibleMemberNumber],
+          )
+          if (!responsible[0]) throw new Error('RESPONSIBLE_NOT_FOUND')
+          responsibleId = responsible[0].id
+        }
       }
+      const profileFirstName = data.memberType === 'school' ? data.schoolName || '' : data.firstName || ''
+      const profileLastName = data.memberType === 'school' ? '' : data.lastName || ''
       const users = await tx<{ id: string }>(
         `INSERT INTO users (email,password_hash,full_name,role) VALUES ($1,$2,$3,'member') RETURNING id`,
-        [data.email, await hashPassword(data.password), `${data.firstName} ${data.lastName}`.trim()],
+        [data.email, await hashPassword(data.password), `${profileFirstName} ${profileLastName}`.trim()],
       )
       const insuranceAllowed = data.memberType !== 'student' && data.insuranceSelected
       const memberships = await tx<{ id: string }>(
@@ -79,11 +83,11 @@ export async function registerMember(_prev: ActionState | null, form: FormData):
       await tx(
         `INSERT INTO member_profiles (membership_id,first_name,last_name,identity_document,phone,address,postal_code,city,province,public_name,public_email,public_phone,public_address,public_address_opt_in,public_postal_code,public_city,public_province,website,bio)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
-        [membershipId, data.firstName, data.lastName, data.identityDocument, data.phone, data.address, data.postalCode, data.city, data.province,
+        [membershipId, profileFirstName, profileLastName, data.identityDocument || null, data.phone, data.address || null, data.postalCode || null, data.city || null, data.province || null,
           data.publicName || null, data.publicEmail || null, data.publicPhone || null, data.publicAddress || null, data.publicAddressOptIn,
           data.publicPostalCode || null,
           data.publicCity || null,
-          data.publicProvince || null, data.website || null, data.bio],
+          data.publicProvince || null, data.website || null, data.bio || null],
       )
       if (data.memberType === 'student') await tx('INSERT INTO student_profiles (membership_id,school_origin) VALUES ($1,$2)', [membershipId, data.schoolOrigin])
       if (data.memberType === 'professional') await tx('INSERT INTO professional_profiles (membership_id,training_school,qualification_summary,home_visit_available,home_visit_notes) VALUES ($1,$2,$3,$4,$5)', [membershipId,data.trainingSchool || null,data.qualificationSummary || null,data.homeVisitAvailable,data.homeVisitNotes || null])
@@ -99,7 +103,7 @@ export async function registerMember(_prev: ActionState | null, form: FormData):
       )
       await tx(`INSERT INTO audit_log (action,entity_type,entity_id,details) VALUES ('membership.registered','membership',$1,$2::jsonb)`,
         [membershipId, JSON.stringify({ memberType: data.memberType })])
-      return{email:data.email,name:`${data.firstName} ${data.lastName}`.trim(),memberType:data.memberType,membershipId}
+      return{email:data.email,name:`${profileFirstName} ${profileLastName}`.trim(),memberType:data.memberType,membershipId}
     })
     await notifyRegistrationSubmitted(created)
     return { ok: true }

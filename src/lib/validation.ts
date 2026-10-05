@@ -7,18 +7,18 @@ const optionalSocial = z.string().trim().max(500).optional().or(z.literal(''))
 
 export const registrationSchema = z.object({
   memberType: z.enum(MEMBER_TYPES),
-  firstName: z.string().trim().min(2, 'Indica el nombre').max(100),
-  lastName: z.string().trim().min(2, 'Indica los apellidos').max(150),
-  identityDocument: z.string().trim().min(5, 'Indica el DNI/NIE').max(30),
+  firstName: z.string().trim().max(100).optional().or(z.literal('')),
+  lastName: z.string().trim().max(150).optional().or(z.literal('')),
+  identityDocument: z.string().trim().max(30).optional().or(z.literal('')),
   phone: z.string().trim().min(6, 'Indica el teléfono').max(30),
   email: z.string().trim().toLowerCase().email('Email no válido').max(254),
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').max(128),
   passwordConfirmation: z.string().min(8, 'Repite la contraseña').max(128),
-  address: z.string().trim().min(3, 'Indica la dirección para recibir la revista anual').max(500),
-  postalCode: z.string().trim().min(3, 'Indica el código postal').max(20),
-  city: z.string().trim().min(2, 'Indica el municipio').max(150),
-  province: z.string().trim().min(2, 'Indica la provincia').max(150),
-  bio: z.string().trim().min(1, 'Indica una presentación').max(2500),
+  address: optionalText,
+  postalCode: optionalText,
+  city: optionalText,
+  province: optionalText,
+  bio: z.string().trim().max(2500).optional().or(z.literal('')),
   privacyAccepted: z.literal('on', { errorMap: () => ({ message: 'Debes aceptar la política de privacidad' }) }),
   registrationFileProvided: z.boolean().default(false),
   schoolOrigin: optionalText,
@@ -46,13 +46,19 @@ export const registrationSchema = z.object({
   homeVisitNotes: z.string().trim().max(2500).optional().or(z.literal('')),
 }).superRefine((data, ctx) => {
   if (data.password !== data.passwordConfirmation) ctx.addIssue({ code: 'custom', path: ['passwordConfirmation'], message: 'Las contraseñas no coinciden' })
+  if (data.memberType !== 'school') {
+    if (!data.firstName) ctx.addIssue({ code: 'custom', path: ['firstName'], message: 'Indica el nombre' })
+    if (!data.lastName) ctx.addIssue({ code: 'custom', path: ['lastName'], message: 'Indica los apellidos' })
+  }
+  if (['student', 'school'].includes(data.memberType) && !data.identityDocument) {
+    ctx.addIssue({ code: 'custom', path: ['identityDocument'], message: 'Indica el DNI/NIE' })
+  }
   if (['professional', 'school'].includes(data.memberType) && !data.registrationFileProvided) {
     ctx.addIssue({ code: 'custom', path: ['registrationFileProvided'], message: data.memberType === 'professional' ? 'Adjunta la titulación en PDF' : 'Adjunta la documentación de la escuela en ZIP o RAR' })
   }
   if (data.memberType === 'student' && !data.schoolOrigin) ctx.addIssue({ code: 'custom', path: ['schoolOrigin'], message: 'Indica la escuela de procedencia' })
   if (data.memberType === 'school') {
     if (!data.schoolName) ctx.addIssue({ code: 'custom', path: ['schoolName'], message: 'Indica el nombre de la escuela' })
-    if (!data.responsibleMemberNumber) ctx.addIssue({ code: 'custom', path: ['responsibleMemberNumber'], message: 'Indica el número del profesional responsable' })
     if (!data.centerType) ctx.addIssue({ code: 'custom', path: ['centerType'], message: 'Indica qué deseas registrar' })
   }
 })
