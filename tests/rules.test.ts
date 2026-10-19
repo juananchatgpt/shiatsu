@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { canCreateEvents, isPublicDirectoryMember } from '../src/lib/access'
-import {adminDeleteMemberSchema,adminEventCreateSchema,adminEventUpdateSchema,adminManualMemberSchema,adminMemberProfileSchema, registrationSchema, eventSchema } from '../src/lib/validation'
+import {adminDeleteMemberSchema,adminEventCreateSchema,adminEventUpdateSchema,adminManualMemberSchema,adminMemberProfileSchema, profileSchema, registrationSchema, eventSchema } from '../src/lib/validation'
 import {getProfileCompletionIssues} from '../src/features/memberships/profile-completion'
 
 test('un alumno nunca es publicable',()=>{assert.equal(isPublicDirectoryMember('student','active',true),false)})
@@ -23,6 +23,16 @@ test('el registro público de escuela solo exige los campos históricos',()=>{
 test('el registro público de profesional deja los datos ampliados para la ficha',()=>{
   const result=registrationSchema.safeParse({memberType:'professional',firstName:'María',lastName:'Shiatsu',phone:'600000000',email:'maria@example.com',password:'segura123',passwordConfirmation:'segura123',privacyAccepted:'on',registrationFileProvided:true})
   assert.equal(result.success,true)
+})
+test('el alta rechaza una contraseña de menos de 8 caracteres',()=>{
+  const result=registrationSchema.safeParse({memberType:'professional',firstName:'María',lastName:'Shiatsu',phone:'600000000',email:'maria@example.com',password:'corta',passwordConfirmation:'corta',privacyAccepted:'on',registrationFileProvided:true})
+  assert.equal(result.success,false)
+  if(!result.success)assert.equal(result.error.issues[0]?.message,'La contraseña debe tener al menos 8 caracteres')
+})
+test('el perfil conserva la provincia privada como dato de entrada',()=>{
+  const result=profileSchema.safeParse({email:'socio@example.com',emailConfirmation:'socio@example.com',firstName:'Ana',lastName:'Pérez',province:'Madrid',directoryOptIn:false,insuranceSelected:false})
+  assert.equal(result.success,true)
+  if(result.success)assert.equal(result.data.province,'Madrid')
 })
 test('un evento no puede terminar antes de comenzar',()=>{
   const result=eventSchema.safeParse({title:'Curso de Shiatsu',description:'Descripción suficientemente larga para validar.',startsAt:'2026-09-20T18:00',endsAt:'2026-09-20T17:00',allDay:false,modality:'in_person',isFree:true})

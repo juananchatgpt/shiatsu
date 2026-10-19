@@ -499,6 +499,11 @@ ejecución definitiva autorizada expresamente.
 - **Seguridad**: descarga autenticada, autorización por propietario/administrador y respuesta `no-store`.
 - **Operación**: los documentos quedan incluidos en la copia y restauración de PostgreSQL.
 
+### 2026-10-19: validación temprana del alta y provincia privada
+- **Alta**: las acciones de servidor de React pueden resetear controles no controlados cuando devuelven un error; las contraseñas deben bloquearse en el navegador con `minLength` y confirmación previa.
+- **Provincia**: el formulario, `profileSchema` y el `UPDATE` ya estaban conectados; se hizo explícito el `value` de las opciones y el `UPDATE` devuelve la fila afectada para no informar de éxito si el perfil no existe.
+- **Verificación**: la base configurada tiene las migraciones 001–012 y una escritura transaccional de prueba sobre `member_profiles.province` devolvió el valor esperado y se revirtió.
+
 ---
 
 ## Gotchas

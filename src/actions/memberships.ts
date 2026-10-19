@@ -144,14 +144,15 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
       await tx('UPDATE users SET email=$1,full_name=$2,updated_at=now() WHERE id=$3',[d.email,`${d.firstName} ${d.lastName}`.trim(),user.id])
        const insured=m.member_type==='professional'&&d.insuranceSelected
       await tx(`UPDATE memberships SET directory_opt_in=$1,insurance_selected=$2,insurance_fee_cents=0,updated_at=now() WHERE id=$3`,[m.member_type !== 'student' && d.directoryOptIn,insured,m.id])
-      await tx(`UPDATE member_profiles SET first_name=$1,last_name=$2,identity_document=$3,phone=$4,secondary_phone=$5,address=$6,
+      const updatedProfiles=await tx<{province:string|null}>(`UPDATE member_profiles SET first_name=$1,last_name=$2,identity_document=$3,phone=$4,secondary_phone=$5,address=$6,
         postal_code=$7,city=$8,province=$9,public_name=$10,public_email=$11,public_phone=$12,public_address=$13,
         public_address_opt_in=$14,public_postal_code=$15,public_city=$16,public_province=$17,website=$18,bio=$19,facebook_url=$20,
-        instagram_url=$21,youtube_url=$22,twitter_url=$23,updated_at=now() WHERE membership_id=$24`,
+        instagram_url=$21,youtube_url=$22,twitter_url=$23,updated_at=now() WHERE membership_id=$24 RETURNING province`,
         [d.firstName,d.lastName,d.identityDocument||null,d.phone||null,d.secondaryPhone||null,d.address||null,d.postalCode||null,
           d.city||null,d.province||null,d.publicName||null,d.publicEmail||null,d.publicPhone||null,d.publicAddress||null,d.publicAddressOptIn,
           d.publicPostalCode||null,d.publicCity||null,d.publicProvince||null,d.website||null,d.bio||null,
           d.facebookUrl||null,d.instagramUrl||null,d.youtubeUrl||null,d.twitterUrl||null,m.id])
+      if(!updatedProfiles[0])throw new Error('PROFILE_NOT_FOUND')
       if(m.member_type==='student')await tx('UPDATE student_profiles SET school_origin=$1 WHERE membership_id=$2',[d.schoolOrigin||'Sin especificar',m.id])
       if(m.member_type==='professional')await tx(`UPDATE professional_profiles SET training_school=$1,qualification_summary=$2,
         teaching_level=$3,teaching_schools=$4,teaching_since_year=$5,home_visit_available=$6,home_visit_notes=$7 WHERE membership_id=$8`,[d.trainingSchool||null,
@@ -170,6 +171,7 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
     revalidatePath('/dashboard');revalidatePath('/perfil');revalidatePath('/directorio');revalidatePath(`/directorio/${result.membershipId}`);revalidatePath('/embed/directorio')
     return {ok:true,profileComplete:result.profileComplete,activated:result.activated,message:result.activated?'Perfil completado y alta activada. Ya tienes asignado tu número de socio.':result.profileComplete?'Perfil completo. Quedará activo cuando Secretaría apruebe la activación.':`Cambios guardados. Para completar el perfil faltan: ${result.completionIssues.join(', ')}.`}
   } catch(error) {
+    if(error instanceof Error&&error.message==='PROFILE_NOT_FOUND')return{error:'No se encontró el perfil que intentas actualizar'}
     if(error instanceof Error&&error.message==='REAUTH_REQUIRED')return{error:'Escribe tu contraseña actual para cambiar el email de acceso'}
     if(error instanceof Error&&error.message==='EMAIL_CONFIRMATION_REQUIRED')return{error:'Repite el nuevo email para confirmar el cambio'}
     if (typeof error === 'object' && error && 'code' in error && error.code === '23505') return { error:'Ese email ya está en uso' }
