@@ -305,6 +305,18 @@
 - Verificación real mediante SNI contra `31.70.159.9`: tanto `shiatsu-apse.es` como
   `areaprivada.shiatsu-apse.es` entregan el certificado `CN=*.shiatsu-apse.es`, válido hasta el
   2027-04-23.
-- WordPress mantiene todavía `home` y `siteurl` en la URL provisional; por eso el dominio raíz puede
-  redirigir temporalmente a `wordpress-wordpress.92jf0k.easypanel.host` hasta decidir el dominio final
-  y actualizar esos valores.
+- Antes del corte definitivo, WordPress mantuvo temporalmente `home` y `siteurl` en la URL provisional;
+  ese estado quedó corregido en el corte al dominio definitivo documentado a continuación.
+
+## Corte al dominio definitivo 2026-10-25
+
+- Juanan confirmó `https://shiatsu-apse.es` como dominio definitivo. WordPress ya tiene `home` y
+  `siteurl` en esa URL, conserva `blog_public=0` y la portada responde 200 con canonical correcto.
+- Se actualizaron 10 páginas y 10 elementos de menú; también se corrigió `theme_mods_kadence` para
+  que login y alta apunten a `https://areaprivada.shiatsu-apse.es`. La portada ya no contiene
+  referencias a `wordpress-wordpress.92jf0k.easypanel.host`, `shiatsu-app.92jf0k.easypanel.host`,
+  `shiatsu.alza-t.com` ni `shiatsu.ochoesferas.com`.
+- El PDF de DNS de IONOS revisado confirma A de raíz, `www` y `areaprivada` hacia `31.70.159.9`,
+  AAAA antiguos eliminados y MX/SPF/DKIM/DMARC de IONOS conservados. `www` todavía devuelve 404
+  porque falta añadirlo como dominio del servicio WordPress en Easypanel. `easypanel` aún necesita
+  su registro A antes de configurar el dominio del panel.
