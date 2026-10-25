@@ -252,10 +252,12 @@
   eventos (1), sesiones (13) y migraciones (12), entre otros.
 - La app responde en el dominio temporal de Easypanel y tiene configurado el dominio definitivo
   `shiatsu.alza-t.com`. El DNS todavía apunta al servidor antiguo; no cambiar hasta validar el corte.
-- Se creó el proyecto Easypanel `wordpress` con WordPress y MariaDB 11. Tiene configurado
-  `shiatsu.ochoesferas.com` y se restauró la base MariaDB antigua (prefijo `wpie_`) mediante un
-  volcado fragmentado validado: 88 tablas y 8.550 INSERTs. `home` y `siteurl` conservan el dominio
-  definitivo; el usuario administrador y la contraseña del `.env` se validaron contra el VPS.
+- Se creó el proyecto Easypanel `wordpress` con WordPress y MariaDB 11. La base MariaDB antigua
+  (prefijo `wpie_`) se restauró mediante un volcado fragmentado validado: 88 tablas y 8.550 INSERTs.
+  Por decisión de Juanan, WordPress queda temporalmente en
+  `https://wordpress-wordpress.92jf0k.easypanel.host`; `home` y `siteurl` ya apuntan a esa URL y el
+  título `Apse Shiatsu` se verificó cargando la portada. El dominio final se configurará después.
+  El usuario administrador y la contraseña del `.env` se validaron contra el VPS.
 - El sitio WordPress probado directamente contra `31.70.159.9` responde con Kadence, 15 páginas,
   medios y el contenido antiguo. Se instalaron Kadence, Kadence Blocks, ACF, CPT UI, Insert Headers
   and Footers y WP Mail SMTP desde WordPress.org. Los plugins premium del origen (`kadence-pro` y
@@ -264,7 +266,8 @@
 - El origen tenía `blog_public=0` y se conservó para no cambiar una decisión editorial sin permiso.
   Antes de abrir la web a indexación hay que desactivar “disuadir a los motores de búsqueda” en
   Ajustes > Lectura, si esa es la decisión del cliente.
-- La app y WordPress tienen los dominios definitivos configurados en Easypanel; el DNS todavía apunta
-  al servidor antiguo. Para el cambio final hay que sustituir ambos registros A por `31.70.159.9`,
-  revisar/eliminar AAAA antiguos y esperar la propagación. Validación previa sin cambiar DNS:
-  `curl --resolve shiatsu.ochoesferas.com:443:31.70.159.9` devuelve la portada nueva.
+- La app tiene configurado el dominio definitivo `shiatsu.alza-t.com`; WordPress queda con la URL
+  provisional hasta que Juanan indique el dominio final. El DNS de los dominios antiguos todavía
+  apunta a los servidores anteriores. Para el corte de la app hay que sustituir su registro A por
+  `31.70.159.9`, revisar/eliminar AAAA antiguos y esperar la propagación. Para WordPress se hará lo
+  mismo cuando se elija el dominio final, actualizando antes `home` y `siteurl`.
