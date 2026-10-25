@@ -1,5 +1,11 @@
 # APSE · Gestión de socios
 
+## Ubicación local
+
+- El repositorio y la aplicación están en `Proyectos/Webs/21. Shiatsu/Aplicacion/`.
+- La configuración local del VPS está separada en `Proyectos/Webs/21. Shiatsu/VPS/`.
+- Ejecutar los comandos de la aplicación desde `Aplicacion/`; no usar la carpeta raíz `21. Shiatsu/` como directorio de trabajo.
+
 ## Estado 2026-10-05
 
 - Aplicación fase 1 construida desde SaaS Factory Postgres.
@@ -234,3 +240,31 @@
   y `ba76f08` (seguro profesional y atención a domicilio). Juanan realiza el deploy manual; no se
   ha desplegado desde el agente. El archivo preexistente `docs/CAMBIOS-28082026.txt` permanece sin
   versionar y no se incluyó en los commits.
+
+## Migración al VPS del cliente 2026-10-25
+
+- VPS del cliente: `31.70.159.9`, con Easypanel instalado. El proyecto `shiatsu` contiene la app
+  desplegada desde el repositorio público `juananchatgpt/shiatsu`, rama `main`, commit `4c70b25`,
+  y un PostgreSQL privado `db` interno al proyecto.
+- La base antigua se volcó desde la red local y se restauró en el PostgreSQL nuevo. Verificación
+  real: 19 tablas públicas y coinciden los recuentos de usuarios (408), memberships (405),
+  perfiles (405), profesionales (255), alumnos (138), escuelas (12), documentos (1), fotos (181),
+  eventos (1), sesiones (13) y migraciones (12), entre otros.
+- La app responde en el dominio temporal de Easypanel y tiene configurado el dominio definitivo
+  `shiatsu.alza-t.com`. El DNS todavía apunta al servidor antiguo; no cambiar hasta validar el corte.
+- Se creó el proyecto Easypanel `wordpress` con WordPress y MariaDB 11. Tiene configurado
+  `shiatsu.ochoesferas.com` y se restauró la base MariaDB antigua (prefijo `wpie_`) mediante un
+  volcado fragmentado validado: 88 tablas y 8.550 INSERTs. `home` y `siteurl` conservan el dominio
+  definitivo; el usuario administrador y la contraseña del `.env` se validaron contra el VPS.
+- El sitio WordPress probado directamente contra `31.70.159.9` responde con Kadence, 15 páginas,
+  medios y el contenido antiguo. Se instalaron Kadence, Kadence Blocks, ACF, CPT UI, Insert Headers
+  and Footers y WP Mail SMTP desde WordPress.org. Los plugins premium del origen (`kadence-pro` y
+  `kadence-blocks-pro`) no formaban parte del export accesible y quedan fuera hasta disponer de sus
+  archivos/licencias; se limpiaron referencias a plugins ausentes para evitar errores de carga.
+- El origen tenía `blog_public=0` y se conservó para no cambiar una decisión editorial sin permiso.
+  Antes de abrir la web a indexación hay que desactivar “disuadir a los motores de búsqueda” en
+  Ajustes > Lectura, si esa es la decisión del cliente.
+- La app y WordPress tienen los dominios definitivos configurados en Easypanel; el DNS todavía apunta
+  al servidor antiguo. Para el cambio final hay que sustituir ambos registros A por `31.70.159.9`,
+  revisar/eliminar AAAA antiguos y esperar la propagación. Validación previa sin cambiar DNS:
+  `curl --resolve shiatsu.ochoesferas.com:443:31.70.159.9` devuelve la portada nueva.

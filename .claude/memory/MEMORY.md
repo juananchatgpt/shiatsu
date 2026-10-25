@@ -7,7 +7,7 @@
 (vacio)
 
 ## project/ — Proyectos y decisiones activas
-- [APSE socios](project/apse-socios.md) — estado, alcance y bloqueos de la aplicación.
+- [APSE socios](project/apse-socios.md) — estado, alcance y bloqueos de la aplicación. El código está en `Aplicacion/`; la configuración local del VPS está separada en `../../../VPS/`.
 
 ## feedback/ — Correcciones y preferencias
 - [Proceso de registro indicado por el cliente](feedback/registro-socios-cliente-2026-08-29.md) — flujo legado solicitado y decisiones pendientes antes de adaptarlo.
