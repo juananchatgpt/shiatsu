@@ -263,6 +263,10 @@
   and Footers y WP Mail SMTP desde WordPress.org. Los plugins premium del origen (`kadence-pro` y
   `kadence-blocks-pro`) no formaban parte del export accesible y quedan fuera hasta disponer de sus
   archivos/licencias; se limpiaron referencias a plugins ausentes para evitar errores de carga.
+- Tras dejar la URL provisional se corrigieron los enlaces absolutos heredados del dominio antiguo:
+  268 referencias en 8 páginas y el elemento de menú `Eventos`. Directorio y eventos apuntan al
+  dominio temporal de la app; el resto de páginas y medios apunta al WordPress provisional. No quedan
+  referencias al dominio antiguo en las páginas públicas consultadas.
 - El origen tenía `blog_public=0` y se conservó para no cambiar una decisión editorial sin permiso.
   Antes de abrir la web a indexación hay que desactivar “disuadir a los motores de búsqueda” en
   Ajustes > Lectura, si esa es la decisión del cliente.
