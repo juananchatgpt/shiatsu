@@ -296,3 +296,15 @@
   `vm.swappiness=10`. Los servicios siguieron `1/1` y la app/WordPress no requirieron reinicio.
 - No se modificaron todavía SSH, firewall, versiones, healthchecks, logs ni copias externas porque
   requieren una ventana de cambio, una decisión de acceso o un destino de backup.
+
+## Certificado TLS 2026-10-25
+
+- Se instaló en Traefik el certificado wildcard `*.shiatsu-apse.es` con SAN adicional
+  `shiatsu-apse.es`, junto con su cadena Sectigo y clave privada, en la configuración persistente de
+  Easypanel. Se reinició solo `easypanel-traefik`.
+- Verificación real mediante SNI contra `31.70.159.9`: tanto `shiatsu-apse.es` como
+  `areaprivada.shiatsu-apse.es` entregan el certificado `CN=*.shiatsu-apse.es`, válido hasta el
+  2027-04-23.
+- WordPress mantiene todavía `home` y `siteurl` en la URL provisional; por eso el dominio raíz puede
+  redirigir temporalmente a `wordpress-wordpress.92jf0k.easypanel.host` hasta decidir el dominio final
+  y actualizar esos valores.
