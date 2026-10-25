@@ -250,31 +250,28 @@
   real: 19 tablas públicas y coinciden los recuentos de usuarios (408), memberships (405),
   perfiles (405), profesionales (255), alumnos (138), escuelas (12), documentos (1), fotos (181),
   eventos (1), sesiones (13) y migraciones (12), entre otros.
-- La app responde en el dominio temporal de Easypanel y tiene configurado el dominio definitivo
-  `shiatsu.alza-t.com`. El DNS todavía apunta al servidor antiguo; no cambiar hasta validar el corte.
+- La app responde en `https://areaprivada.shiatsu-apse.es`; su registro A apunta al VPS y el
+  certificado wildcard cubre el dominio.
 - Se creó el proyecto Easypanel `wordpress` con WordPress y MariaDB 11. La base MariaDB antigua
   (prefijo `wpie_`) se restauró mediante un volcado fragmentado validado: 88 tablas y 8.550 INSERTs.
-  Por decisión de Juanan, WordPress queda temporalmente en
-  `https://wordpress-wordpress.92jf0k.easypanel.host`; `home` y `siteurl` ya apuntan a esa URL y el
-  título `Apse Shiatsu` se verificó cargando la portada. El dominio final se configurará después.
+  Por decisión de Juanan, el corte final quedó en `https://shiatsu-apse.es`; `home` y `siteurl` ya
+  apuntan a esa URL y el título `Apse Shiatsu` se verificó cargando la portada.
   El usuario administrador y la contraseña del `.env` se validaron contra el VPS.
 - El sitio WordPress probado directamente contra `31.70.159.9` responde con Kadence, 15 páginas,
   medios y el contenido antiguo. Se instalaron Kadence, Kadence Blocks, ACF, CPT UI, Insert Headers
   and Footers y WP Mail SMTP desde WordPress.org. Los plugins premium del origen (`kadence-pro` y
   `kadence-blocks-pro`) no formaban parte del export accesible y quedan fuera hasta disponer de sus
   archivos/licencias; se limpiaron referencias a plugins ausentes para evitar errores de carga.
-- Tras dejar la URL provisional se corrigieron los enlaces absolutos heredados del dominio antiguo:
-  268 referencias en 8 páginas y el elemento de menú `Eventos`. Directorio y eventos apuntan al
-  dominio temporal de la app; el resto de páginas y medios apunta al WordPress provisional. No quedan
-  referencias al dominio antiguo en las páginas públicas consultadas.
+- Se corrigieron los enlaces absolutos heredados del dominio antiguo: 268 referencias en 8 páginas y
+  el elemento de menú `Eventos`. Directorio, eventos, login y registro apuntan a
+  `areaprivada.shiatsu-apse.es`; el resto de páginas y medios apunta a `shiatsu-apse.es`. No quedan
+  referencias a las URLs antiguas en las páginas públicas consultadas.
 - El origen tenía `blog_public=0` y se conservó para no cambiar una decisión editorial sin permiso.
   Antes de abrir la web a indexación hay que desactivar “disuadir a los motores de búsqueda” en
   Ajustes > Lectura, si esa es la decisión del cliente.
-- La app tiene configurado el dominio definitivo `shiatsu.alza-t.com`; WordPress queda con la URL
-  provisional hasta que Juanan indique el dominio final. El DNS de los dominios antiguos todavía
-  apunta a los servidores anteriores. Para el corte de la app hay que sustituir su registro A por
-  `31.70.159.9`, revisar/eliminar AAAA antiguos y esperar la propagación. Para WordPress se hará lo
-  mismo cuando se elija el dominio final, actualizando antes `home` y `siteurl`.
+- La app y WordPress tienen sus dominios finales configurados en Easypanel. Los registros A de raíz,
+  `www` y `areaprivada` apuntan a `31.70.159.9`; los AAAA antiguos fueron eliminados. `www` está
+  añadido como dominio adicional de WordPress y redirige al dominio canónico.
 
 ## Revisión de configuración VPS 2026-10-25
 
