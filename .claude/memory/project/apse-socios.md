@@ -275,3 +275,21 @@
   apunta a los servidores anteriores. Para el corte de la app hay que sustituir su registro A por
   `31.70.159.9`, revisar/eliminar AAAA antiguos y esperar la propagación. Para WordPress se hará lo
   mismo cuando se elija el dominio final, actualizando antes `home` y `siteurl`.
+
+## Revisión de configuración VPS 2026-10-25
+
+- El VPS ejecuta Ubuntu 24.04.5, Docker 29.9.2 y Easypanel/Traefik. Tiene 116 GB de disco (11 GB
+  usados), 3,8 GB de RAM (2,4 GB disponibles en la medición) y no tiene swap.
+- Los seis servicios están `1/1` y las dos aplicaciones responden. PostgreSQL acepta conexiones y
+  la base `shiatsu` ocupa aproximadamente 33 MB. PostgreSQL y MariaDB tienen datos persistentes;
+  WordPress conserva sus archivos en el volumen `wordpress_wordpress_data`.
+- No se encontraron healthchecks Docker para los servicios. La app usa una imagen sin tag visible
+  y WordPress usa `wordpress:latest`; antes de producción conviene fijar versiones/digests y definir
+  healthchecks y límites de memoria.
+- La configuración efectiva permite `PermitRootLogin yes` y `PasswordAuthentication yes`. UFW está
+  inactivo y la política INPUT es ACCEPT; Fail2ban está inactivo. También escucha el panel en 3000
+  y Docker/Swarm deja puertos de infraestructura en el host. No cambiar sin crear y probar antes un
+  usuario SSH con clave; prioridad de seguridad: firewall, acceso SSH por clave y bloqueo de root.
+- No se encontraron copias locales de PostgreSQL, MariaDB o WordPress en las rutas habituales. Antes
+  de considerar el VPS listo hay que automatizar copias externas y probar una restauración.
+- Esta auditoría fue solo lectura: no se modificó la configuración del VPS.
