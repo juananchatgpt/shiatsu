@@ -292,4 +292,7 @@
   usuario SSH con clave; prioridad de seguridad: firewall, acceso SSH por clave y bloqueo de root.
 - No se encontraron copias locales de PostgreSQL, MariaDB o WordPress en las rutas habituales. Antes
   de considerar el VPS listo hay que automatizar copias externas y probar una restauración.
-- Esta auditoría fue solo lectura: no se modificó la configuración del VPS.
+- Mejora autónoma aplicada después de la auditoría: se creó un swapfile persistente de 2 GB con
+  `vm.swappiness=10`. Los servicios siguieron `1/1` y la app/WordPress no requirieron reinicio.
+- No se modificaron todavía SSH, firewall, versiones, healthchecks, logs ni copias externas porque
+  requieren una ventana de cambio, una decisión de acceso o un destino de backup.
