@@ -318,5 +318,8 @@
   `shiatsu.alza-t.com` ni `shiatsu.ochoesferas.com`.
 - El PDF de DNS de IONOS revisado confirma A de raíz, `www` y `areaprivada` hacia `31.70.159.9`,
   AAAA antiguos eliminados y MX/SPF/DKIM/DMARC de IONOS conservados. `www` todavía devuelve 404
-  porque falta añadirlo como dominio del servicio WordPress en Easypanel. `easypanel` aún necesita
-  su registro A antes de configurar el dominio del panel.
+  porque falta añadirlo como dominio del servicio WordPress en Easypanel. En el momento del PDF,
+  `easypanel` aún no tenía su registro A; se creó y configuró posteriormente.
+- El registro A de `easypanel.shiatsu-apse.es` se creó posteriormente y Easypanel se configuró desde
+  Ajustes > General con ese dominio. La pantalla de login responde por HTTPS y el certificado
+  wildcard se valida correctamente.
