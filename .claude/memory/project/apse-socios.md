@@ -327,7 +327,7 @@
 - Para importar una copia `.wpress` de aproximadamente 600 MB se modificó el archivo persistente
   de PHP del servicio WordPress en `/etc/easypanel/projects/wordpress/wordpress/files/1.txt`.
 - Valores efectivos verificados dentro del contenedor: `upload_max_filesize=1024M`,
-  `post_max_size=1100M`, `memory_limit=512M`, `max_execution_time=900` y `max_input_time=900`.
+  `post_max_size=1100M`, `memory_limit=1024M`, `max_execution_time=900` y `max_input_time=900`.
 - Se conservó una copia previa en `1.txt.bak-20261026` y se forzó la recreación del servicio
   `wordpress_wordpress`; quedó convergente y estable.
 - Verificación posterior: el contenedor aplica todos los valores y el VPS conserva aproximadamente
