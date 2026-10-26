@@ -321,3 +321,15 @@
   wildcard se valida correctamente.
 - `www.shiatsu-apse.es` se añadió al servicio WordPress en Easypanel y responde 301 hacia el dominio
   canónico `https://shiatsu-apse.es/`.
+
+## Restauración All-in-One WP Migration 2026-10-26
+
+- Para importar una copia `.wpress` de aproximadamente 600 MB se modificó el archivo persistente
+  de PHP del servicio WordPress en `/etc/easypanel/projects/wordpress/wordpress/files/1.txt`.
+- Valores efectivos verificados dentro del contenedor: `upload_max_filesize=650M`,
+  `post_max_size=700M`, `memory_limit=512M`, `max_execution_time=900` y `max_input_time=900`.
+- Se conservó una copia previa en `1.txt.bak-20261026` y se forzó la recreación del servicio
+  `wordpress_wordpress`; quedó convergente y estable.
+- Verificación posterior: el contenedor aplica todos los valores y el VPS conserva aproximadamente
+  104 GB libres. La importación debe hacerse solo después de guardar un rollback del WordPress actual;
+  All-in-One reemplaza base de datos, medios, plugins y temas.
