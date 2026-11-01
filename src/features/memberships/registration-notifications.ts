@@ -46,18 +46,18 @@ export async function notifyRegistrationDecision(person: RegistrationPerson, dec
   const helpUrl = process.env.REGISTRATION_HELP_URL?.trim()
   const approved = decision === 'approved'
   const text = approved
-    ? `Hola ${person.name}, tu solicitud ha sido aprobada. Entra en ${loginUrl} con la contraseña que elegiste y completa tu perfil.${helpUrl ? ` Ayuda: ${helpUrl}` : ''}`
+    ? `Hola ${person.name}, tu solicitud ha sido aprobada y tu alta está activa. Entra en ${loginUrl} con la contraseña que elegiste.${helpUrl ? ` Ayuda: ${helpUrl}` : ''}`
     : `Hola ${person.name}, APSE no ha aprobado tu solicitud. Puedes contactar con Secretaría si necesitas más información.`
   const html = approved
-    ? `<p>Hola ${name},</p><p>Tu solicitud ha sido aprobada y está en <strong>pre-registro</strong>.</p><p><a href="${loginUrl}">Entrar en la intranet</a> con la contraseña que elegiste y completar tu perfil.</p>${helpUrl ? `<p><a href="${escapeHtml(helpUrl)}">Consultar la ayuda</a></p>` : ''}`
+    ? `<p>Hola ${name},</p><p>Tu solicitud ha sido aprobada y tu alta está activa.</p><p><a href="${loginUrl}">Entrar en la intranet</a> con la contraseña que elegiste.</p>${helpUrl ? `<p><a href="${escapeHtml(helpUrl)}">Consultar la ayuda</a></p>` : ''}`
     : `<p>Hola ${name},</p><p>APSE no ha aprobado tu solicitud. Puedes contactar con Secretaría si necesitas más información.</p>`
   const jobs: Promise<void>[] = [safelySend({to: person.email, subject: approved ? 'APSE · Solicitud aprobada' : 'APSE · Solicitud no aprobada', text, html})]
   const recipients = secretaryRecipients()
   if (recipients.length) jobs.push(safelySend({
     to: recipients,
     subject: approved ? 'APSE · Solicitud aprobada' : 'APSE · Solicitud rechazada',
-    text: `${person.name}: ${approved ? 'aprobada y en pre-registro' : 'rechazada'}.`,
-    html: `<p>La solicitud de <strong>${name}</strong> ha sido ${approved ? 'aprobada y ha pasado a pre-registro' : 'rechazada'}.</p>`,
+    text: `${person.name}: ${approved ? 'aprobada y activa' : 'rechazada'}.`,
+    html: `<p>La solicitud de <strong>${name}</strong> ha sido ${approved ? 'aprobada y activada' : 'rechazada'}.</p>`,
   }))
   await Promise.all(jobs)
 }

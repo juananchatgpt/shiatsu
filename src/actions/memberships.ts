@@ -142,14 +142,14 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
       const completionIssues=getProfileCompletionIssues(m.member_type,d);const profileComplete=completionIssues.length===0
       if(d.email!==m.email&&(!d.currentPassword||!await verifyPassword(d.currentPassword,m.password_hash)))throw new Error('REAUTH_REQUIRED')
       await tx('UPDATE users SET email=$1,full_name=$2,updated_at=now() WHERE id=$3',[d.email,`${d.firstName} ${d.lastName}`.trim(),user.id])
-       const insured=m.member_type==='professional'&&d.insuranceSelected
-      await tx(`UPDATE memberships SET directory_opt_in=$1,insurance_selected=$2,insurance_fee_cents=0,updated_at=now() WHERE id=$3`,[m.member_type !== 'student' && d.directoryOptIn,insured,m.id])
+      const publicAddressAllowed=m.member_type!=='student'&&Boolean(d.publicAddressOptIn)
+      await tx(`UPDATE memberships SET directory_opt_in=$1,updated_at=now() WHERE id=$2`,[m.member_type !== 'student' && d.directoryOptIn,m.id])
       const updatedProfiles=await tx<{province:string|null}>(`UPDATE member_profiles SET first_name=$1,last_name=$2,identity_document=$3,phone=$4,secondary_phone=$5,address=$6,
         postal_code=$7,city=$8,province=$9,public_name=$10,public_email=$11,public_phone=$12,public_address=$13,
         public_address_opt_in=$14,public_postal_code=$15,public_city=$16,public_province=$17,website=$18,bio=$19,facebook_url=$20,
         instagram_url=$21,youtube_url=$22,twitter_url=$23,updated_at=now() WHERE membership_id=$24 RETURNING province`,
         [d.firstName,d.lastName,d.identityDocument||null,d.phone||null,d.secondaryPhone||null,d.address||null,d.postalCode||null,
-          d.city||null,d.province||null,d.publicName||null,d.publicEmail||null,d.publicPhone||null,d.publicAddress||null,d.publicAddressOptIn,
+          d.city||null,d.province||null,d.publicName||null,d.publicEmail||null,d.publicPhone||null,d.publicAddress||null,publicAddressAllowed,
           d.publicPostalCode||null,d.publicCity||null,d.publicProvince||null,d.website||null,d.bio||null,
           d.facebookUrl||null,d.instagramUrl||null,d.youtubeUrl||null,d.twitterUrl||null,m.id])
       if(!updatedProfiles[0])throw new Error('PROFILE_NOT_FOUND')
@@ -158,18 +158,14 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
         teaching_level=$3,teaching_schools=$4,teaching_since_year=$5,home_visit_available=$6,home_visit_notes=$7 WHERE membership_id=$8`,[d.trainingSchool||null,
         d.qualificationSummary||null,d.teachingLevel||null,d.teachingSchools||null,d.teachingSinceYear||null,d.homeVisitAvailable,d.homeVisitNotes||null,m.id])
       if(m.member_type==='school')await tx(`UPDATE school_profiles SET school_name=$1,description=$2,program_summary=$3,teachers_summary=$4,direction_experience_summary=$5,center_type=$6,languages=$7 WHERE membership_id=$8`,[d.schoolName||'Escuela',d.schoolDescription||null,d.programSummary||null,d.teachersSummary||null,d.directionExperienceSummary||null,d.centerType||null,d.languages||null,m.id])
-      const workflow=await tx<{status:string}>(`UPDATE memberships SET
-        profile_completed_at=CASE WHEN status IN ('pending','pre_registered') THEN CASE WHEN $1 THEN COALESCE(profile_completed_at,now()) ELSE NULL END ELSE profile_completed_at END,
-        status=CASE WHEN status='pre_registered' AND $1 THEN 'active' ELSE status END,
-        anniversary_date=CASE WHEN status='pre_registered' AND $1 THEN COALESCE(anniversary_date,CURRENT_DATE) ELSE anniversary_date END,
-        member_number=CASE WHEN status='pre_registered' AND $1 AND member_number IS NULL THEN nextval('member_number_seq')::text ELSE member_number END,
-        updated_at=now() WHERE id=$2 RETURNING status`,[profileComplete,m.id])
-      const activated=m.status!=='active'&&workflow[0]?.status==='active'
-      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.profile_updated','membership',$2,$3::jsonb)`,[user.id,m.id,JSON.stringify({profileComplete,activated})])
-      return{membershipId:m.id,profileComplete,completionIssues,activated}
+      await tx(`UPDATE memberships SET
+        profile_completed_at=CASE WHEN status='pending' THEN CASE WHEN $1 THEN COALESCE(profile_completed_at,now()) ELSE NULL END ELSE profile_completed_at END,
+        updated_at=now() WHERE id=$2`,[profileComplete,m.id])
+      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.profile_updated','membership',$2,$3::jsonb)`,[user.id,m.id,JSON.stringify({profileComplete})])
+      return{membershipId:m.id,profileComplete,completionIssues}
     })
     revalidatePath('/dashboard');revalidatePath('/perfil');revalidatePath('/directorio');revalidatePath(`/directorio/${result.membershipId}`);revalidatePath('/embed/directorio')
-    return {ok:true,profileComplete:result.profileComplete,activated:result.activated,message:result.activated?'Perfil completado y alta activada. Ya tienes asignado tu número de socio.':result.profileComplete?'Perfil completo. Quedará activo cuando Secretaría apruebe la activación.':`Cambios guardados. Para completar el perfil faltan: ${result.completionIssues.join(', ')}.`}
+    return {ok:true,profileComplete:result.profileComplete,message:result.profileComplete?'Perfil completo. Secretaría podrá activar el alta cuando valide la documentación y el pago.':`Cambios guardados. Para completar el perfil faltan: ${result.completionIssues.join(', ')}.`}
   } catch(error) {
     if(error instanceof Error&&error.message==='PROFILE_NOT_FOUND')return{error:'No se encontró el perfil que intentas actualizar'}
     if(error instanceof Error&&error.message==='REAUTH_REQUIRED')return{error:'Escribe tu contraseña actual para cambiar el email de acceso'}

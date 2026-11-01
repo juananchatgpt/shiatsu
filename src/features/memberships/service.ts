@@ -64,29 +64,58 @@ export interface AdminMemberRow {
   province: string | null; created_at: string
 }
 
-export async function listAdminMembers(filters: { type?: string; status?: string; search?: string; scope?:'current'|'inactive'|'all' } = {}) {
+export interface AdminMemberFilters { type?: string; status?: string; search?: string; scope?:'active'|'current'|'inactive'|'all'; insurance?:'yes'|'no' }
+
+function buildAdminMemberFilter(filters:AdminMemberFilters = {}) {
   const conditions: string[] = []
   const params: unknown[] = []
   if (filters.type) { params.push(filters.type); conditions.push(`m.member_type = $${params.length}`) }
   if (filters.status) { params.push(filters.status); conditions.push(`m.status = $${params.length}`) }
   else if(filters.scope==='inactive')conditions.push(`m.status = 'inactive'`)
-  else if(filters.scope!=='all')conditions.push(`m.status <> 'inactive'`)
+  else if(filters.scope==='all'){}
+  else conditions.push(`m.status = 'active'`)
+  if(filters.insurance==='yes')conditions.push(`m.insurance_selected = true`)
+  if(filters.insurance==='no')conditions.push(`m.insurance_selected = false`)
   if (filters.search) {
     params.push(`%${filters.search}%`)
     conditions.push(`(p.first_name ILIKE $${params.length} OR p.last_name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR m.member_number ILIKE $${params.length})`)
   }
+  return{conditions,params}
+}
+
+export async function listAdminMembers(filters: AdminMemberFilters = {}) {
+  const {conditions,params}=buildAdminMemberFilter(filters)
   return query<AdminMemberRow>(
     `SELECT m.id, u.email, m.member_number, m.member_type, m.status, m.insurance_selected,
       m.directory_opt_in, p.first_name, p.last_name, p.province, m.created_at
      FROM memberships m JOIN users u ON u.id=m.user_id JOIN member_profiles p ON p.membership_id=m.id
      ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
-     ORDER BY CASE m.status WHEN 'pending' THEN 0 WHEN 'pre_registered' THEN 1 ELSE 2 END, m.created_at DESC LIMIT 500`, params,
+     ORDER BY CASE m.status WHEN 'pending' THEN 0 WHEN 'active' THEN 1 ELSE 2 END, m.created_at DESC LIMIT 500`, params,
   )
 }
 
 export async function getAdminMemberScopeCounts(){const rows=await query<{current:number;inactive:number;total:number}>(`SELECT
-  COUNT(*) FILTER(WHERE status<>'inactive')::int current,COUNT(*) FILTER(WHERE status='inactive')::int inactive,COUNT(*)::int total FROM memberships`)
+  COUNT(*) FILTER(WHERE status='active')::int current,COUNT(*) FILTER(WHERE status='inactive')::int inactive,COUNT(*)::int total FROM memberships`)
   return rows[0]??{current:0,inactive:0,total:0}}
+
+export async function getAdminMemberTypeCounts(filters:AdminMemberFilters = {}){
+  const {conditions,params}=buildAdminMemberFilter(filters)
+  const rows=await query<{total:number;students:number;professionals:number;schools:number}>(`SELECT COUNT(*)::int total,
+    COUNT(*) FILTER (WHERE m.member_type='student')::int students,
+    COUNT(*) FILTER (WHERE m.member_type='professional')::int professionals,
+    COUNT(*) FILTER (WHERE m.member_type='school')::int schools
+    FROM memberships m JOIN users u ON u.id=m.user_id JOIN member_profiles p ON p.membership_id=m.id
+    ${conditions.length?`WHERE ${conditions.join(' AND ')}`:''}`,params)
+  return rows[0]??{total:0,students:0,professionals:0,schools:0}
+}
+
+export interface MembershipAuditRow { id:number; actor:string; action:string; details:Record<string,unknown>; created_at:string }
+export async function listMembershipAudit(membershipId:string){
+  return query<MembershipAuditRow>(`SELECT a.id,COALESCE(u.full_name,u.email,'Sistema') actor,a.action,a.details,a.created_at::text
+    FROM audit_log a LEFT JOIN users u ON u.id=a.actor_user_id
+    WHERE a.entity_type='membership' AND a.entity_id=$1
+    ORDER BY a.created_at DESC LIMIT 30`,[membershipId])
+}
 
 export interface PublicDirectoryRow {
   id: string; member_type: 'professional' | 'school'; name: string; public_city: string | null
@@ -157,11 +186,10 @@ export async function getPublicDirectoryMember(id:string){
 }
 
 export async function getAdminStats() {
-  const rows = await query<{ total: number; pending: number; preRegistered:number; active: number; directory: number }>(
+  const rows = await query<{ total: number; pending: number; active: number; directory: number }>(
     `SELECT COUNT(*)::int total, COUNT(*) FILTER (WHERE status='pending')::int pending,
-      COUNT(*) FILTER (WHERE status='pre_registered')::int "preRegistered",
       COUNT(*) FILTER (WHERE status='active')::int active,
       COUNT(*) FILTER (WHERE status='active' AND directory_opt_in)::int directory FROM memberships`,
   )
-  return rows[0] ?? { total: 0, pending: 0, preRegistered:0, active: 0, directory: 0 }
+  return rows[0] ?? { total: 0, pending: 0, active: 0, directory: 0 }
 }

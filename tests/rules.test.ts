@@ -55,7 +55,7 @@ test('el alta manual de escuela exige nombre del centro',()=>{
   assert.equal(result.success,false)
 })
 
-test('el pre-registro solo considera completo el perfil con datos privados obligatorios',()=>{
+test('el alta pendiente solo considera completo el perfil con datos privados obligatorios',()=>{
   const complete={firstName:'Ana',lastName:'Pérez',identityDocument:'12345678A',phone:'600000000',address:'Calle Mayor 1',postalCode:'45001',city:'Toledo',province:'Toledo',schoolOrigin:'Escuela Centro',bio:'Profesional formada en shiatsu y terapias manuales.',directoryOptIn:false}
   assert.deepEqual(getProfileCompletionIssues('student',complete),[])
   assert.ok(getProfileCompletionIssues('student',{...complete,address:''}).includes('dirección'))

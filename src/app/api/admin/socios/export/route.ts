@@ -19,7 +19,7 @@ interface ExportRow {
 }
 
 const typeLabels:Record<string,string>={student:'Alumno',professional:'Profesional',school:'Escuela'}
-const statusLabels:Record<string,string>={pending:'Pendiente de revisión',pre_registered:'Pre-registro',active:'Activo',inactive:'Inactivo',suspended:'Suspendido',rejected:'Rechazado'}
+const statusLabels:Record<string,string>={pending:'Pendiente de revisión',active:'Activo',inactive:'Inactivo',rejected:'Rechazado'}
 const money=(cents:number)=>new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(cents/100)
 const cell=(value:unknown)=>{let text=value===null||value===undefined?'':String(value);if(/^[=+\-@]/.test(text))text=`'${text}`;return `"${text.replace(/"/g,'""')}"`}
 const row=(values:unknown[])=>values.map(cell).join(';')
@@ -31,7 +31,8 @@ export async function GET(request:NextRequest){
   const conditions:string[]=[];const values:unknown[]=[]
   const type=params.get('type');if(type&&['student','professional','school'].includes(type)){values.push(type);conditions.push(`m.member_type=$${values.length}`)}
   const status=params.get('status');if(status&&Object.keys(statusLabels).includes(status)){values.push(status);conditions.push(`m.status=$${values.length}`)}
-  const scope=params.get('scope');if(!status&&scope==='inactive')conditions.push(`m.status='inactive'`);else if(!status&&scope!=='all')conditions.push(`m.status<>'inactive'`)
+  const scope=params.get('scope');if(!status&&scope==='inactive')conditions.push(`m.status='inactive'`);else if(!status&&scope!=='all')conditions.push(`m.status='active'`)
+  const insurance=params.get('insurance');if(insurance==='yes')conditions.push('m.insurance_selected=true');else if(insurance==='no')conditions.push('m.insurance_selected=false')
   const search=params.get('q')?.trim();if(search){values.push(`%${search}%`);conditions.push(`(p.first_name ILIKE $${values.length} OR p.last_name ILIKE $${values.length} OR u.email ILIKE $${values.length} OR m.member_number ILIKE $${values.length})`)}
   const rows=await query<ExportRow>(`SELECT m.member_number,m.member_type,m.status,m.insurance_selected,m.base_fee_cents,m.insurance_fee_cents,m.anniversary_date::text,
     m.directory_opt_in,m.privacy_accepted_at::text,m.rejection_reason,m.internal_notes,m.approved_at::text,m.profile_completed_at::text,m.payment_confirmed_at::text,m.created_at::text,m.updated_at::text,
