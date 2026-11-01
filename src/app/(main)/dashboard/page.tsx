@@ -5,6 +5,8 @@ import { memberStatusLabels, memberTypeLabels } from '@/lib/domain'
 import { StatusBadge } from '@/components/status-badge'
 import { getAdminEventStats } from '@/features/events/service'
 
+export const dynamic='force-dynamic'
+
 export default async function DashboardPage(){
   const user=await requireUser()
   if(user.role==='admin'){

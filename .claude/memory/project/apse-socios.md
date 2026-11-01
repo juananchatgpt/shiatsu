@@ -8,6 +8,15 @@
 
 ## Estado 2026-10-05
 
+## Estado 2026-11-01
+
+- En producción, el recuento verificado directamente en PostgreSQL es: 180 `active`, 224
+  `inactive` y 2 `pending` (406 membresías). Dashboard y listado de socios usan el criterio
+  `status='active'`; ambas páginas se fuerzan a renderizado dinámico para evitar cifras antiguas.
+- Administración permite eliminar definitivamente una cuenta administradora solo después de
+  desactivarla. No permite eliminar la cuenta propia, una cuenta activa ni cuentas con borradores
+  de comunicación asociados; la eliminación deja auditoría y requiere confirmación en pantalla.
+
 - Aplicación fase 1 construida desde SaaS Factory Postgres.
 - PRP activo: `../../PRPs/PRP-001-gestion-socios-apse.md`.
 - Implementados: altas, perfil, administración, directorio, eventos, widgets, borradores de

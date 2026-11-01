@@ -119,6 +119,27 @@ export async function setAdminActive(_prev:{ok?:boolean;error?:string}|null,form
   catch(error){if(error instanceof Error&&error.message==='LAST_ADMIN')return{error:'Debe quedar al menos un administrador activo'};return{error:'No se pudo cambiar el estado'}}
 }
 
+export async function deleteAdmin(_prev:{ok?:boolean;error?:string}|null,form:FormData){
+  const actor=await requireAdmin();const targetId=String(form.get('adminId')??'')
+  if(!UUID_PATTERN.test(targetId))return{error:'Administrador no válido'}
+  if(targetId===actor.id)return{error:'No puedes eliminar tu propia cuenta'}
+  try{await withTransaction(async tx=>{
+    const targets=await tx<{email:string;full_name:string|null;active:boolean}>(`SELECT email,full_name,active FROM users WHERE id=$1 AND role='admin' FOR UPDATE`,[targetId]);const target=targets[0]
+    if(!target)throw new Error('NOT_FOUND')
+    if(target.active)throw new Error('ACTIVE_ADMIN')
+    const drafts=await tx<{id:string}>(`SELECT id FROM communication_drafts WHERE created_by=$1 LIMIT 1`,[targetId])
+    if(drafts[0])throw new Error('HAS_DRAFTS')
+    await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'admin.deleted','user',$2,$3::jsonb)`,[actor.id,targetId,JSON.stringify({email:target.email,fullName:target.full_name})])
+    await tx('DELETE FROM users WHERE id=$1',[targetId])
+  });revalidatePath('/admin/administradores');return{ok:true}}
+  catch(error){
+    if(error instanceof Error&&error.message==='NOT_FOUND')return{error:'El administrador ya no existe'}
+    if(error instanceof Error&&error.message==='ACTIVE_ADMIN')return{error:'Primero debes desactivar la cuenta'}
+    if(error instanceof Error&&error.message==='HAS_DRAFTS')return{error:'No se puede eliminar: la cuenta tiene borradores de comunicación asociados'}
+    return{error:'No se pudo eliminar el administrador'}
+  }
+}
+
 const text=(form:FormData,name:string)=>String(form.get(name)??'')
 const choice=(form:FormData,name:string)=>['yes','on','true'].includes(String(form.get(name)??''))
 

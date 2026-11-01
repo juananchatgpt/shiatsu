@@ -4,6 +4,8 @@ import { getAdminMemberScopeCounts, getAdminMemberTypeCounts, listAdminMembers }
 import { memberTypeLabels, MEMBER_STATUSES, memberStatusLabels, type MemberStatus } from '@/lib/domain'
 import { StatusBadge } from '@/components/status-badge'
 
+export const dynamic='force-dynamic'
+
 export default async function MembersAdminPage({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){
   await requireAdmin()
   const p=await searchParams
