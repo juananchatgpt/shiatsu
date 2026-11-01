@@ -87,6 +87,8 @@
 - Eventos públicos y widget ofrecen dos vistas: lista y calendario mensual con navegación entre
   meses. El calendario abre en el mes del próximo evento, muestra actividades de varios días en cada
   fecha afectada y mantiene los datos privados de moderación fuera del cliente.
+- El widget de eventos permite alternar entre próximos y pasados mediante `?view=past`; el mensaje
+  de estado vacío se mantiene cuando no hay eventos en la vista seleccionada.
 - Incidencia 2026-08-28: el único evento desapareció porque se borró su socio organizador de prueba
   y la relación histórica usaba `ON DELETE CASCADE`. La migración `008` cambia la relación a
   `ON DELETE RESTRICT`; la acción administrativa también bloquea el borrado y explica que primero se
