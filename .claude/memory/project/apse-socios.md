@@ -52,7 +52,10 @@
 - El listado administrativo separa `Socios actuales`, `Inactivos` y `Todos`, con recuentos reales.
   La búsqueda, tipo, estado y pestaña se conservan al abrir una ficha y volver al listado.
 - El selector de provincias del directorio se alimenta solo de perfiles activos, visibles y con
-  provincia; al elegir profesionales o escuelas se recalcula para ese tipo.
+  provincia pública; al elegir profesionales o escuelas se recalcula para ese tipo. El permiso
+  `public_address_opt_in` sigue controlando la exposición de calle, código postal y municipio,
+  pero no impide filtrar por la provincia pública. Esto corrige los perfiles históricos importados
+  cuyo permiso de dirección quedó sin marcar aunque sí tenían `public_province`.
 - Los filtros del directorio, tanto en la página pública como en el widget, siguen el orden de
   decisión solicitado por el cliente: tipo de perfil primero, nombre después y provincia al final.
   El widget también carga únicamente las provincias que tienen perfiles públicos para el tipo
