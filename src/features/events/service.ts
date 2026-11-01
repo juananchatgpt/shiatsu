@@ -29,8 +29,13 @@ export async function getAdminEvent(id:string){
   const rows=await query<EventRow>(`${SELECT} WHERE e.id=$1 LIMIT 1`,[id])
   return rows[0]??null
 }
-export async function listAdminEvents(status?:string) {
-  return query<EventRow>(`${SELECT} ${status?'WHERE e.status=$1':''} ORDER BY CASE e.status WHEN 'pending_review' THEN 0 ELSE 1 END,e.created_at DESC LIMIT 300`,status?[status]:[])
+export async function listAdminEvents(status?:string,view:'all'|'upcoming'|'past'='all') {
+  const conditions:string[]=[]
+  const params:unknown[]=[]
+  if(status){params.push(status);conditions.push(`e.status=$${params.length}`)}
+  if(view==='upcoming')conditions.push('e.ends_at >= now()')
+  if(view==='past')conditions.push('e.ends_at < now()')
+  return query<EventRow>(`${SELECT} ${conditions.length?`WHERE ${conditions.join(' AND ')}`:''} ORDER BY CASE e.status WHEN 'pending_review' THEN 0 ELSE 1 END,e.starts_at DESC LIMIT 300`,params)
 }
 export async function getAdminEventStats(){
   const rows=await query<{total:number;pending:number}>(`SELECT COUNT(*)::int total,

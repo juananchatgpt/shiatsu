@@ -96,6 +96,8 @@
 - El resumen administrativo muestra el total de eventos y un acceso `Ver y editar todos`; el filtro
   de pendientes queda separado. La lista vacía explica si no hay eventos o si el filtro no encuentra
   resultados. El administrador puede editar eventos de cualquier estado desde su ficha.
+- Administración de eventos permite filtrar por periodo (`Todos`, `Próximos` o `Pasados`) y combinarlo
+  con el estado; el histórico queda accesible sin mezclarse con las próximas actividades.
 - El alta administrativa de eventos exige asignar un profesional o escuela activo. El formulario lo
   explica y valida el organizador antes de consultar PostgreSQL, mostrando un error claro si falta o
   dejó de estar activo; el resto de validaciones también se devuelve en español dentro del formulario.
