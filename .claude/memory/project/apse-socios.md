@@ -60,6 +60,8 @@
   decisión solicitado por el cliente: tipo de perfil primero, nombre después y provincia al final.
   El widget también carga únicamente las provincias que tienen perfiles públicos para el tipo
   seleccionado y descarta cualquier provincia que ya no sea válida.
+- En móvil, los filtros del directorio se presentan dentro de un desplegable `Filtrar socios` para
+  dejar el listado visible; en escritorio permanecen abiertos y en la parte superior del widget.
 - El widget del directorio muestra tres fichas por fila en escritorio, dos en tablet y una en móvil.
 - Los filtros del widget permanecen fijos en la parte superior mientras se recorren las fichas.
 - La búsqueda pública por nombre o escuela ignora mayúsculas, minúsculas y signos diacríticos
