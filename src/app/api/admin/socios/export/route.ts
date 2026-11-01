@@ -33,6 +33,7 @@ export async function GET(request:NextRequest){
   const status=params.get('status');if(status&&Object.keys(statusLabels).includes(status)){values.push(status);conditions.push(`m.status=$${values.length}`)}
   const scope=params.get('scope');if(!status&&scope==='inactive')conditions.push(`m.status='inactive'`);else if(!status&&scope!=='all')conditions.push(`m.status='active'`)
   const insurance=params.get('insurance');if(insurance==='yes')conditions.push('m.insurance_selected=true');else if(insurance==='no')conditions.push('m.insurance_selected=false')
+  const directory=params.get('directory');if(directory==='yes')conditions.push('m.directory_opt_in=true');else if(directory==='no')conditions.push('m.directory_opt_in=false')
   const search=params.get('q')?.trim();if(search){values.push(`%${search}%`);conditions.push(`(p.first_name ILIKE $${values.length} OR p.last_name ILIKE $${values.length} OR u.email ILIKE $${values.length} OR m.member_number ILIKE $${values.length})`)}
   const rows=await query<ExportRow>(`SELECT m.member_number,m.member_type,m.status,m.insurance_selected,m.base_fee_cents,m.insurance_fee_cents,m.anniversary_date::text,
     m.directory_opt_in,m.privacy_accepted_at::text,m.rejection_reason,m.internal_notes,m.approved_at::text,m.profile_completed_at::text,m.payment_confirmed_at::text,m.created_at::text,m.updated_at::text,

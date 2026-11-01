@@ -64,7 +64,7 @@ export interface AdminMemberRow {
   province: string | null; created_at: string
 }
 
-export interface AdminMemberFilters { type?: string; status?: string; search?: string; scope?:'active'|'current'|'inactive'|'all'; insurance?:'yes'|'no' }
+export interface AdminMemberFilters { type?: string; status?: string; search?: string; scope?:'active'|'current'|'inactive'|'all'; insurance?:'yes'|'no'; directory?:'yes'|'no' }
 
 function buildAdminMemberFilter(filters:AdminMemberFilters = {}) {
   const conditions: string[] = []
@@ -76,6 +76,8 @@ function buildAdminMemberFilter(filters:AdminMemberFilters = {}) {
   else conditions.push(`m.status = 'active'`)
   if(filters.insurance==='yes')conditions.push(`m.insurance_selected = true`)
   if(filters.insurance==='no')conditions.push(`m.insurance_selected = false`)
+  if(filters.directory==='yes')conditions.push(`m.directory_opt_in = true`)
+  if(filters.directory==='no')conditions.push(`m.directory_opt_in = false`)
   if (filters.search) {
     params.push(`%${filters.search}%`)
     conditions.push(`(p.first_name ILIKE $${params.length} OR p.last_name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR m.member_number ILIKE $${params.length})`)
