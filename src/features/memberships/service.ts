@@ -130,7 +130,7 @@ export async function listPublicDirectory(filters: { type?: string; province?: s
   if (filters.type && ['professional', 'school'].includes(filters.type)) {
     params.push(filters.type); conditions.push(`m.member_type = $${params.length}`)
   }
-  if (filters.province) { params.push(filters.province); conditions.push(`p.public_address_opt_in=true AND p.public_province = $${params.length}`) }
+  if (filters.province) { params.push(filters.province); conditions.push(`BTRIM(p.public_province) = $${params.length}`) }
   if (filters.search) {
     const normalizedSearch=normalizeDirectorySearch(filters.search)
     if(normalizedSearch){
@@ -153,7 +153,7 @@ export async function listPublicDirectory(filters: { type?: string; province?: s
   )
 }
 
-export async function listPublicDirectoryProvinces(type?:string){const params:unknown[]=[];const conditions=["m.status='active'",'m.directory_opt_in=true','p.public_address_opt_in=true',"m.member_type IN ('professional','school')","NULLIF(BTRIM(p.public_province),'') IS NOT NULL"]
+export async function listPublicDirectoryProvinces(type?:string){const params:unknown[]=[];const conditions=["m.status='active'",'m.directory_opt_in=true',"m.member_type IN ('professional','school')","NULLIF(BTRIM(p.public_province),'') IS NOT NULL"]
   if(type&&['professional','school'].includes(type)){params.push(type);conditions.push(`m.member_type=$${params.length}`)}
   const rows=await query<{province:string}>(`SELECT DISTINCT BTRIM(p.public_province) province FROM memberships m JOIN member_profiles p ON p.membership_id=m.id WHERE ${conditions.join(' AND ')} ORDER BY province`,params)
   return rows.map(row=>row.province)}
