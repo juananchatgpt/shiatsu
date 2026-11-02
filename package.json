@@ -13,6 +13,7 @@
     "db:verify": "tsx scripts/verify-db.ts",
     "user:create": "tsx scripts/create-user.ts",
     "admin:invite": "tsx scripts/invite-admin.ts",
+    "smtp:test": "tsx scripts/test-smtp.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "wp:inspect": "tsx scripts/import-wordpress-users.ts --dry-run",
     "wp:import": "tsx scripts/import-wordpress-users.ts --apply",

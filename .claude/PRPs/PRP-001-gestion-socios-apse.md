@@ -504,6 +504,14 @@ ejecución definitiva autorizada expresamente.
 - **Provincia**: el formulario, `profileSchema` y el `UPDATE` ya estaban conectados; se hizo explícito el `value` de las opciones y el `UPDATE` devuelve la fila afectada para no informar de éxito si el perfil no existe.
 - **Verificación**: la base configurada tiene las migraciones 001–012 y una escritura transaccional de prueba sobre `member_profiles.province` devolvió el valor esperado y se revirtió.
 
+### 2026-11-02: SMTP de IONOS en 587
+- **Riesgo**: con `SMTP_SECURE=true` heredado del proveedor anterior (465), el 587 falla; sin
+  `SMTP_FROM_EMAIL`, el From quedaba vacío e IONOS rechaza remitentes distintos del buzón autenticado.
+- **Fix**: `mailer.ts` deduce `secure` del puerto si no se define, exige STARTTLS (`requireTLS`) en 587
+  y usa `SMTP_USER` como From por defecto. Prueba controlada: `npm run smtp:test -- --verify` o con
+  un destinatario explícito.
+- **Apply to**: cualquier cambio de proveedor SMTP; los enlaces dependen de `NEXT_PUBLIC_SITE_URL`.
+
 ---
 
 ## Gotchas
