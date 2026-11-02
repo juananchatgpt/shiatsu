@@ -25,16 +25,16 @@ export async function notifyRegistrationSubmitted(person: RegistrationPerson) {
   const jobs: Promise<void>[] = [safelySend({
     to: person.email,
     subject: 'APSE · Solicitud recibida',
-    text: `Hola ${person.name}, hemos recibido tu solicitud como ${type}. Secretaría revisará la información y te comunicará la decisión.`,
-    html: `<p>Hola ${name},</p><p>Hemos recibido tu solicitud como <strong>${type}</strong>. Secretaría revisará la información y te comunicará la decisión.</p>`,
+    text: `Hola ${person.name}:\n\nHemos recibido tu solicitud de alta en APSE como ${type}. Gracias por tu interés.\n\nSecretaría revisará la información y te avisaremos por correo en cuanto haya una decisión. No necesitas hacer nada más por ahora.\n\nUn saludo,\nSecretaría de APSE`,
+    html: `<p>Hola ${name}:</p><p>Hemos recibido tu solicitud de alta en APSE como <strong>${type}</strong>. Gracias por tu interés.</p><p>Secretaría revisará la información y te avisaremos por correo en cuanto haya una decisión. No necesitas hacer nada más por ahora.</p><p>Un saludo,<br>Secretaría de APSE</p>`,
   })]
   const recipients = secretaryRecipients()
   if (recipients.length) jobs.push(safelySend({
     to: recipients,
     replyTo: person.email,
     subject: `APSE · Nueva solicitud de ${type}`,
-    text: `${person.name} ha presentado una solicitud. Revisar: ${adminUrl}`,
-    html: `<p><strong>${name}</strong> ha presentado una solicitud como ${type}.</p><p><a href="${adminUrl}">Revisar solicitud</a></p>`,
+    text: `${person.name} (${person.email}) ha presentado una solicitud de alta como ${type}.\n\nRevisar la solicitud: ${adminUrl}`,
+    html: `<p><strong>${name}</strong> (${escapeHtml(person.email)}) ha presentado una solicitud de alta como <strong>${type}</strong>.</p><p><a href="${adminUrl}">Revisar la solicitud</a></p>`,
   }))
   await Promise.all(jobs)
 }
@@ -46,18 +46,18 @@ export async function notifyRegistrationDecision(person: RegistrationPerson, dec
   const helpUrl = process.env.REGISTRATION_HELP_URL?.trim()
   const approved = decision === 'approved'
   const text = approved
-    ? `Hola ${person.name}, tu solicitud ha sido aprobada y tu alta está activa. Entra en ${loginUrl} con la contraseña que elegiste.${helpUrl ? ` Ayuda: ${helpUrl}` : ''}`
-    : `Hola ${person.name}, APSE no ha aprobado tu solicitud. Puedes contactar con Secretaría si necesitas más información.`
+    ? `Hola ${person.name}:\n\nTu solicitud ha sido aprobada y tu alta en APSE ya está activa. Te damos la bienvenida.\n\nPuedes entrar en el área privada con tu email y la contraseña que elegiste: ${loginUrl}${helpUrl ? `\n\nGuía de ayuda: ${helpUrl}` : ''}\n\nUn saludo,\nSecretaría de APSE`
+    : `Hola ${person.name}:\n\nHemos revisado tu solicitud de alta y en esta ocasión no ha podido ser aprobada.\n\nSi quieres más información, puedes ponerte en contacto con Secretaría de APSE.\n\nUn saludo,\nSecretaría de APSE`
   const html = approved
-    ? `<p>Hola ${name},</p><p>Tu solicitud ha sido aprobada y tu alta está activa.</p><p><a href="${loginUrl}">Entrar en la intranet</a> con la contraseña que elegiste.</p>${helpUrl ? `<p><a href="${escapeHtml(helpUrl)}">Consultar la ayuda</a></p>` : ''}`
-    : `<p>Hola ${name},</p><p>APSE no ha aprobado tu solicitud. Puedes contactar con Secretaría si necesitas más información.</p>`
+    ? `<p>Hola ${name}:</p><p>Tu solicitud ha sido aprobada y tu alta en APSE ya está activa. Te damos la bienvenida.</p><p>Puedes entrar en el área privada con tu email y la contraseña que elegiste.</p><p><a href="${loginUrl}" style="display:inline-block;background:#1c1917;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px">Entrar en el área privada</a></p>${helpUrl ? `<p><a href="${escapeHtml(helpUrl)}">Consultar la guía de ayuda</a></p>` : ''}<p>Un saludo,<br>Secretaría de APSE</p>`
+    : `<p>Hola ${name}:</p><p>Hemos revisado tu solicitud de alta y en esta ocasión no ha podido ser aprobada.</p><p>Si quieres más información, puedes ponerte en contacto con Secretaría de APSE.</p><p>Un saludo,<br>Secretaría de APSE</p>`
   const jobs: Promise<void>[] = [safelySend({to: person.email, subject: approved ? 'APSE · Solicitud aprobada' : 'APSE · Solicitud no aprobada', text, html})]
   const recipients = secretaryRecipients()
   if (recipients.length) jobs.push(safelySend({
     to: recipients,
     subject: approved ? 'APSE · Solicitud aprobada' : 'APSE · Solicitud rechazada',
-    text: `${person.name}: ${approved ? 'aprobada y activa' : 'rechazada'}.`,
-    html: `<p>La solicitud de <strong>${name}</strong> ha sido ${approved ? 'aprobada y activada' : 'rechazada'}.</p>`,
+    text: `La solicitud de alta de ${person.name} (${person.email}) ha sido ${approved ? 'aprobada y el socio ya está activo' : 'rechazada'}.\n\nFicha: ${siteUrl()}/admin/socios/${person.membershipId}`,
+    html: `<p>La solicitud de alta de <strong>${name}</strong> (${escapeHtml(person.email)}) ha sido ${approved ? 'aprobada y el socio ya está activo' : 'rechazada'}.</p><p><a href="${siteUrl()}/admin/socios/${person.membershipId}">Ver la ficha</a></p>`,
   }))
   await Promise.all(jobs)
 }

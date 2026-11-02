@@ -16,8 +16,13 @@ export async function requestPasswordReset(_prev:ActionState|null,form:FormData)
   const users=await query<{id:string}>('SELECT id FROM users WHERE email=$1 AND active=true LIMIT 1',[email])
   if(users[0]&&process.env.SMTP_HOST){
     const raw=randomBytes(32).toString('hex');await query(`INSERT INTO password_reset_tokens(token_hash,user_id,expires_at) VALUES($1,$2,now()+interval '1 hour')`,[hashToken(raw),users[0].id])
-    const base=process.env.NEXT_PUBLIC_SITE_URL||'http://localhost:3000';const link=`${base}/restablecer-contrasena?token=${raw}`
-    await sendEmail({to:email,subject:'Restablece tu contraseña de APSE',text:`Abre este enlace durante la próxima hora: ${link}`,html:`<p>Abre este enlace durante la próxima hora:</p><p><a href="${link}">Restablecer contraseña</a></p>`})
+    const base=(process.env.NEXT_PUBLIC_SITE_URL||'http://localhost:3000').replace(/\/$/,'');const link=`${base}/restablecer-contrasena?token=${raw}`
+    await sendEmail({
+      to:email,
+      subject:'Restablece tu contraseña de APSE',
+      text:`Hola:\n\nHemos recibido una solicitud para restablecer la contraseña de tu cuenta en el área privada de APSE.\n\nPara elegir una contraseña nueva, abre este enlace (caduca en una hora y solo se puede usar una vez):\n${link}\n\nSi no has pedido este cambio, puedes ignorar este correo: tu contraseña actual seguirá funcionando.`,
+      html:`<p>Hola:</p><p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en el área privada de APSE.</p><p>Para elegir una contraseña nueva, pulsa el botón. El enlace caduca en una hora y solo se puede usar una vez.</p><p><a href="${link}" style="display:inline-block;background:#1c1917;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px">Restablecer contraseña</a></p><p>Si no has pedido este cambio, puedes ignorar este correo: tu contraseña actual seguirá funcionando.</p>`,
+    })
   }
   return{ok:true}
 }
