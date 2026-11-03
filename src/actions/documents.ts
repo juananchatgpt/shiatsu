@@ -36,6 +36,8 @@ export async function deleteMembershipDocument(form:FormData){
 export async function reviewMembershipDocument(form:FormData){
   const admin=await requireAdmin();const id=String(form.get('documentId')??'');const status=String(form.get('status')??'')
   if(!['valid','rejected','pending'].includes(status))return
-  await withTransaction(async tx=>{const rows=await tx<{membership_id:string}>(`UPDATE membership_documents SET status=$1,reviewed_by=$2,reviewed_at=CASE WHEN $1='pending' THEN NULL ELSE now() END WHERE id=$3 RETURNING membership_id`,[status,admin.id,id]);if(rows[0])await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.document_reviewed','membership_document',$2,$3::jsonb)`,[admin.id,id,JSON.stringify({status})])})
+  let membershipId:string|undefined
+  await withTransaction(async tx=>{const rows=await tx<{membership_id:string}>(`UPDATE membership_documents SET status=$1,reviewed_by=$2,reviewed_at=CASE WHEN $1='pending' THEN NULL ELSE now() END WHERE id=$3 RETURNING membership_id`,[status,admin.id,id]);membershipId=rows[0]?.membership_id;if(rows[0])await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.document_reviewed','membership_document',$2,$3::jsonb)`,[admin.id,id,JSON.stringify({status})])})
   revalidatePath('/admin/socios')
+  if(membershipId)revalidatePath(`/admin/socios/${membershipId}`)
 }
