@@ -158,14 +158,11 @@ export async function updateProfile(_prev: ActionState | null, form: FormData): 
         teaching_level=$3,teaching_schools=$4,teaching_since_year=$5,home_visit_available=$6,home_visit_notes=$7 WHERE membership_id=$8`,[d.trainingSchool||null,
         d.qualificationSummary||null,d.teachingLevel||null,d.teachingSchools||null,d.teachingSinceYear||null,d.homeVisitAvailable,d.homeVisitNotes||null,m.id])
       if(m.member_type==='school')await tx(`UPDATE school_profiles SET school_name=$1,description=$2,program_summary=$3,teachers_summary=$4,direction_experience_summary=$5,center_type=$6,languages=$7 WHERE membership_id=$8`,[d.schoolName||'Escuela',d.schoolDescription||null,d.programSummary||null,d.teachersSummary||null,d.directionExperienceSummary||null,d.centerType||null,d.languages||null,m.id])
-      await tx(`UPDATE memberships SET
-        profile_completed_at=CASE WHEN status='pending' THEN CASE WHEN $1 THEN COALESCE(profile_completed_at,now()) ELSE NULL END ELSE profile_completed_at END,
-        updated_at=now() WHERE id=$2`,[profileComplete,m.id])
       await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.profile_updated','membership',$2,$3::jsonb)`,[user.id,m.id,JSON.stringify({profileComplete})])
       return{membershipId:m.id,profileComplete,completionIssues}
     })
     revalidatePath('/dashboard');revalidatePath('/perfil');revalidatePath('/directorio');revalidatePath(`/directorio/${result.membershipId}`);revalidatePath('/embed/directorio')
-    return {ok:true,profileComplete:result.profileComplete,message:result.profileComplete?'Perfil completo. Secretaría podrá activar el alta cuando valide la documentación y el pago.':`Cambios guardados. Para completar el perfil faltan: ${result.completionIssues.join(', ')}.`}
+    return {ok:true,profileComplete:result.profileComplete,message:result.profileComplete?'Perfil completo. Secretaría podrá activar el alta cuando valide la documentación.':`Cambios guardados. Para completar el perfil faltan: ${result.completionIssues.join(', ')}.`}
   } catch(error) {
     if(error instanceof Error&&error.message==='PROFILE_NOT_FOUND')return{error:'No se encontró el perfil que intentas actualizar'}
     if(error instanceof Error&&error.message==='REAUTH_REQUIRED')return{error:'Escribe tu contraseña actual para cambiar el email de acceso'}

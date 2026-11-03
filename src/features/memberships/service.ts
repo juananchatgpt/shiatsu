@@ -6,7 +6,7 @@ export interface MembershipDetail {
   id: string; user_id: string; email: string; full_name: string | null; member_number: string | null
   member_type: MemberType; status: MemberStatus; insurance_selected: boolean; base_fee_cents: number
   insurance_fee_cents: number; anniversary_date: string | null; directory_opt_in: boolean
-  approved_at:string|null;profile_completed_at:string|null;payment_confirmed_at:string|null
+  approved_at:string|null
   rejection_reason: string | null; first_name: string; last_name: string; identity_document: string | null
   phone: string | null; secondary_phone: string | null; address: string | null; postal_code: string | null
   city: string | null; province: string | null; public_name: string | null; public_email: string | null
@@ -25,7 +25,7 @@ export interface MembershipDetail {
 const DETAIL_SELECT = `
   SELECT m.id, m.user_id, u.email, u.full_name, m.member_number, m.member_type, m.status,
     m.insurance_selected, m.base_fee_cents, m.insurance_fee_cents, m.anniversary_date::text AS anniversary_date,
-    m.directory_opt_in, m.rejection_reason,m.approved_at::text,m.profile_completed_at::text,m.payment_confirmed_at::text, p.first_name, p.last_name, p.identity_document,
+    m.directory_opt_in, m.rejection_reason,m.approved_at::text, p.first_name, p.last_name, p.identity_document,
     p.phone, p.secondary_phone, p.address, p.postal_code, p.city, p.province,
     p.public_name, p.public_email, p.public_phone, p.public_address, p.public_address_opt_in, p.public_postal_code,
     p.public_city, p.public_province, p.website, p.bio, p.facebook_url, p.instagram_url, p.youtube_url,p.twitter_url,

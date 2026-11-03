@@ -19,37 +19,30 @@ export async function updateMembershipStatus(_prev:MembershipWorkflowState|null,
   const parsed=membershipStatusSchema.safeParse({membershipId:String(form.get('membershipId')??''),status:String(form.get('status')??'')})
   if(!parsed.success) return{error:'Revisa el estado seleccionado'}
   const {membershipId,status}=parsed.data
-  const paymentConfirmed=['yes','on','true'].includes(String(form.get('paymentConfirmed')??''))
   try{
     const result=await withTransaction(async tx=>{
-      const rows=await tx<{status:string;member_type:MemberType;profile_completed_at:string|null;payment_confirmed_at:string|null;email:string;name:string;has_qualification:boolean}>(`SELECT m.status,m.member_type,m.profile_completed_at,m.payment_confirmed_at,u.email,
+      const rows=await tx<{status:string;member_type:MemberType;email:string;name:string;has_qualification:boolean}>(`SELECT m.status,m.member_type,u.email,
         BTRIM(CONCAT(p.first_name,' ',p.last_name)) name,
         EXISTS(SELECT 1 FROM membership_documents d WHERE d.membership_id=m.id AND d.kind IN ('professional_qualification','registration_document') AND d.status='valid') has_qualification
         FROM memberships m JOIN users u ON u.id=m.user_id JOIN member_profiles p ON p.membership_id=m.id
         WHERE m.id=$1 FOR UPDATE OF m`,[membershipId])
       const member=rows[0];if(!member)throw new Error('MEMBERSHIP_NOT_FOUND')
       if(status==='active'&&member.member_type!=='student'&&!member.has_qualification)throw new Error('QUALIFICATION_REQUIRED')
-      if(status==='active'&&!member.profile_completed_at)throw new Error('PROFILE_REQUIRED')
-      if(status==='active'&&!paymentConfirmed)throw new Error('PAYMENT_REQUIRED')
       await tx(`UPDATE memberships SET status=$1,
         approved_by=CASE WHEN $1='active' THEN COALESCE(approved_by,$2) ELSE approved_by END,
         approved_at=CASE WHEN $1='active' THEN COALESCE(approved_at,now()) ELSE approved_at END,
-        payment_confirmed_at=CASE WHEN $4 THEN COALESCE(payment_confirmed_at,now()) ELSE NULL END,
-        payment_confirmed_by=CASE WHEN $4 THEN COALESCE(payment_confirmed_by,$2) ELSE NULL END,
         anniversary_date=CASE WHEN $1='active' THEN COALESCE(anniversary_date,CURRENT_DATE) ELSE anniversary_date END,
         member_number=CASE WHEN $1='active' AND member_number IS NULL THEN nextval('member_number_seq')::text ELSE member_number END,
-        updated_at=now() WHERE id=$3`,[status,admin.id,membershipId,paymentConfirmed])
+        updated_at=now() WHERE id=$3`,[status,admin.id,membershipId])
       await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.status_changed','membership',$2,$3::jsonb)`,[admin.id,membershipId,JSON.stringify({from:member.status,to:status})])
       const decision:'approved'|'rejected'|null=member.status!==status?(status==='active'&&member.status==='pending'?'approved':status==='rejected'?'rejected':null):null
       return{...member,decision}
     })
     if(result.decision)await notifyRegistrationDecision({email:result.email,name:result.name,memberType:result.member_type,membershipId},result.decision)
     revalidateMembershipViews(membershipId)
-    return{ok:true,message:status==='active'?'Solicitud validada y socio activado.':'Estado y pago guardados.'}
+    return{ok:true,message:status==='active'?'Solicitud validada y socio activado.':'Estado guardado.'}
   }catch(error){
     if(error instanceof Error&&error.message==='QUALIFICATION_REQUIRED')return{error:'Antes de activar a un profesional o escuela, revisa su documentación y márcala como Válida.'}
-    if(error instanceof Error&&error.message==='PROFILE_REQUIRED')return{error:'Para activar debe constar el perfil obligatorio completo.'}
-    if(error instanceof Error&&error.message==='PAYMENT_REQUIRED')return{error:'Para activar debes marcar el pago como confirmado.'}
     return{error:'No se pudo cambiar el estado del socio'}
   }
 }
@@ -157,10 +150,9 @@ export async function adminCreateMember(_prev:{ok?:boolean;error?:string;members
     let responsibleId:string|null=null;if(d.memberType==='school'&&d.responsibleMemberNumber){const responsible=await tx<{id:string}>(`SELECT id FROM memberships WHERE member_number=$1 AND member_type='professional' LIMIT 1`,[d.responsibleMemberNumber]);if(!responsible[0])throw new Error('RESPONSIBLE_NOT_FOUND');responsibleId=responsible[0].id}
     const users=await tx<{id:string}>(`INSERT INTO users(email,password_hash,full_name,role,email_verified_at) VALUES($1,$2,$3,'member',now()) RETURNING id`,[d.email,await hashPassword(d.password),`${d.firstName} ${d.lastName}`.trim()])
     const insured=d.memberType==='professional'&&d.insuranceSelected
-    const memberships=await tx<{id:string}>(`INSERT INTO memberships(user_id,member_number,member_type,status,insurance_selected,base_fee_cents,insurance_fee_cents,anniversary_date,directory_opt_in,privacy_accepted_at,approved_by,approved_at,profile_completed_at,payment_confirmed_at,payment_confirmed_by)
+    const memberships=await tx<{id:string}>(`INSERT INTO memberships(user_id,member_number,member_type,status,insurance_selected,base_fee_cents,insurance_fee_cents,anniversary_date,directory_opt_in,privacy_accepted_at,approved_by,approved_at)
       VALUES($1,COALESCE(NULLIF($2,''),CASE WHEN $3='active' THEN nextval('member_number_seq')::text END),$4,$3,$5,$6,$7,NULLIF($8,'')::date,$9,now(),
-       CASE WHEN $3='active' THEN $10 END,CASE WHEN $3='active' THEN now() END,
-      CASE WHEN $3='active' THEN now() END,CASE WHEN $3='active' THEN now() END,CASE WHEN $3='active' THEN $10 END) RETURNING id`,
+       CASE WHEN $3='active' THEN $10 END,CASE WHEN $3='active' THEN now() END) RETURNING id`,
       [users[0].id,d.memberNumber||'',d.status,d.memberType,insured,FEES_CENTS[d.memberType],0,d.anniversaryDate||'',d.memberType!=='student'&&d.directoryOptIn,admin.id]);membershipId=memberships[0].id
     await tx(`INSERT INTO member_profiles(membership_id,first_name,last_name,identity_document,phone,secondary_phone,address,postal_code,city,province,public_name,public_email,public_phone,public_address,public_address_opt_in,public_postal_code,public_city,public_province,website,bio)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,[membershipId,d.firstName,d.lastName,d.identityDocument||null,d.phone||null,d.secondaryPhone||null,d.address||null,d.postalCode||null,d.city||null,d.province||null,d.publicName||null,d.publicEmail||null,d.publicPhone||null,d.publicAddress||null,d.publicAddressOptIn,d.publicPostalCode||null,d.publicCity||null,d.publicProvince||null,d.website||null,d.bio||null])
@@ -207,9 +199,6 @@ export async function adminUpdateMemberProfile(_prev:{ok?:boolean;error?:string;
     if(member.member_type==='student')await tx('UPDATE student_profiles SET school_origin=$1 WHERE membership_id=$2',[d.schoolOrigin||'Sin especificar',d.membershipId])
     if(member.member_type==='professional')await tx(`UPDATE professional_profiles SET training_school=$1,qualification_summary=$2,teaching_level=$3,teaching_schools=$4,teaching_since_year=$5,home_visit_available=$6,home_visit_notes=$7 WHERE membership_id=$8`,[d.trainingSchool||null,d.qualificationSummary||null,d.teachingLevel||null,d.teachingSchools||null,d.teachingSinceYear||null,d.homeVisitAvailable,d.homeVisitNotes||null,d.membershipId])
     if(member.member_type==='school'){let responsibleId:null|string=null;if(d.responsibleMemberNumber){const responsible=await tx<{id:string}>(`SELECT id FROM memberships WHERE member_number=$1 AND member_type='professional' LIMIT 1`,[d.responsibleMemberNumber]);if(!responsible[0])throw new Error('RESPONSIBLE_NOT_FOUND');responsibleId=responsible[0].id}await tx(`UPDATE school_profiles SET school_name=$1,description=$2,program_summary=$3,teachers_summary=$4,direction_experience_summary=$5,center_type=$6,languages=$7,responsible_professional_membership_id=$8 WHERE membership_id=$9`,[d.schoolName||'Escuela',d.schoolDescription||null,d.programSummary||null,d.teachersSummary||null,d.directionExperienceSummary||null,d.centerType||null,d.languages||null,responsibleId,d.membershipId])}
-    await tx(`UPDATE memberships SET
-      profile_completed_at=CASE WHEN status='pending' THEN CASE WHEN $1 THEN COALESCE(profile_completed_at,now()) ELSE NULL END ELSE profile_completed_at END,
-      updated_at=now() WHERE id=$2`,[profileComplete,d.membershipId])
     await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.profile_updated_by_admin','membership',$2,$3::jsonb)`,[admin.id,d.membershipId,JSON.stringify({passwordChanged:Boolean(passwordHash),profileComplete})])
   });revalidateMembershipViews(d.membershipId);return{ok:true,message:'Todos los datos se han guardado. La activación se realiza desde el estado del alta.'}}
   catch(error){if(error instanceof Error&&error.message==='RESPONSIBLE_NOT_FOUND')return{error:'El número indicado no pertenece a un profesional'};if(typeof error==='object'&&error&&'code'in error&&error.code==='23505')return{error:'El email, número de socio o profesional responsable ya está en uso'};return{error:'No se pudieron guardar los cambios'}}

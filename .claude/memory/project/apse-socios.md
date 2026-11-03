@@ -25,8 +25,9 @@
 - Se retiró de la interfaz y de la acción de cambio de estado el campo `Motivo del estado`; las notas
   internas de Membresía son el lugar para comentarios administrativos. La columna histórica
   `rejection_reason` se conserva para no perder datos existentes.
-- El punto de validación manual de pago y perfil no se modificó, pendiente de la decisión sobre el
-  nuevo flujo solicitado por APSE.
+- Se retiraron del CRM la caja de pago manual, los indicadores de perfil/pago y sus bloqueos para
+  activar. La activación mantiene únicamente la revisión de documentación profesional/escuela;
+  las columnas históricas de fechas siguen en PostgreSQL sin registrar nuevas comprobaciones.
 
 - Aplicación fase 1 construida desde SaaS Factory Postgres.
 - PRP activo: `../../PRPs/PRP-001-gestion-socios-apse.md`.
