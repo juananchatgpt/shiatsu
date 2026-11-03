@@ -111,7 +111,7 @@ export const adminEventCreateSchema = eventSchema.and(z.object({
 }))
 
 export const membershipStatusSchema = z.object({
-  membershipId: z.string().uuid(), status: z.enum(MEMBER_STATUSES), reason: z.string().trim().max(1000).optional(),
+  membershipId: z.string().uuid(), status: z.enum(MEMBER_STATUSES),
 })
 
 export const adminDeleteMemberSchema = z.object({

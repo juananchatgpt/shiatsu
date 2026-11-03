@@ -16,9 +16,9 @@ export interface MembershipWorkflowState {ok?:boolean;error?:string;message?:str
 
 export async function updateMembershipStatus(_prev:MembershipWorkflowState|null,form:FormData):Promise<MembershipWorkflowState> {
   const admin=await requireAdmin()
-  const parsed=membershipStatusSchema.safeParse({membershipId:String(form.get('membershipId')??''),status:String(form.get('status')??''),reason:String(form.get('reason')??'')})
+  const parsed=membershipStatusSchema.safeParse({membershipId:String(form.get('membershipId')??''),status:String(form.get('status')??'')})
   if(!parsed.success) return{error:'Revisa el estado seleccionado'}
-  const {membershipId,status,reason}=parsed.data
+  const {membershipId,status}=parsed.data
   const paymentConfirmed=['yes','on','true'].includes(String(form.get('paymentConfirmed')??''))
   try{
     const result=await withTransaction(async tx=>{
@@ -31,15 +31,15 @@ export async function updateMembershipStatus(_prev:MembershipWorkflowState|null,
       if(status==='active'&&member.member_type!=='student'&&!member.has_qualification)throw new Error('QUALIFICATION_REQUIRED')
       if(status==='active'&&!member.profile_completed_at)throw new Error('PROFILE_REQUIRED')
       if(status==='active'&&!paymentConfirmed)throw new Error('PAYMENT_REQUIRED')
-      await tx(`UPDATE memberships SET status=$1,rejection_reason=$2,
-        approved_by=CASE WHEN $1='active' THEN COALESCE(approved_by,$3) ELSE approved_by END,
+      await tx(`UPDATE memberships SET status=$1,
+        approved_by=CASE WHEN $1='active' THEN COALESCE(approved_by,$2) ELSE approved_by END,
         approved_at=CASE WHEN $1='active' THEN COALESCE(approved_at,now()) ELSE approved_at END,
-        payment_confirmed_at=CASE WHEN $5 THEN COALESCE(payment_confirmed_at,now()) ELSE NULL END,
-        payment_confirmed_by=CASE WHEN $5 THEN COALESCE(payment_confirmed_by,$3) ELSE NULL END,
+        payment_confirmed_at=CASE WHEN $4 THEN COALESCE(payment_confirmed_at,now()) ELSE NULL END,
+        payment_confirmed_by=CASE WHEN $4 THEN COALESCE(payment_confirmed_by,$2) ELSE NULL END,
         anniversary_date=CASE WHEN $1='active' THEN COALESCE(anniversary_date,CURRENT_DATE) ELSE anniversary_date END,
         member_number=CASE WHEN $1='active' AND member_number IS NULL THEN nextval('member_number_seq')::text ELSE member_number END,
-        updated_at=now() WHERE id=$4`,[status,reason||null,admin.id,membershipId,paymentConfirmed])
-      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.status_changed','membership',$2,$3::jsonb)`,[admin.id,membershipId,JSON.stringify({from:member.status,to:status,reason:reason||null})])
+        updated_at=now() WHERE id=$3`,[status,admin.id,membershipId,paymentConfirmed])
+      await tx(`INSERT INTO audit_log(actor_user_id,action,entity_type,entity_id,details) VALUES($1,'membership.status_changed','membership',$2,$3::jsonb)`,[admin.id,membershipId,JSON.stringify({from:member.status,to:status})])
       const decision:'approved'|'rejected'|null=member.status!==status?(status==='active'&&member.status==='pending'?'approved':status==='rejected'?'rejected':null):null
       return{...member,decision}
     })

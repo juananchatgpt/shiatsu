@@ -17,6 +17,17 @@
   desactivarla. No permite eliminar la cuenta propia, una cuenta activa ni cuentas con borradores
   de comunicación asociados; la eliminación deja auditoría y requiere confirmación en pantalla.
 
+## Estado 2026-11-03
+
+- La ficha administrativa de socio se fuerza a consultar datos actuales y el selector de estado se
+  refresca después de guardar, evitando que la pantalla vuelva visualmente al estado anterior.
+- La sección de contraseña de la ficha administrativa queda al final del formulario.
+- Se retiró de la interfaz y de la acción de cambio de estado el campo `Motivo del estado`; las notas
+  internas de Membresía son el lugar para comentarios administrativos. La columna histórica
+  `rejection_reason` se conserva para no perder datos existentes.
+- El punto de validación manual de pago y perfil no se modificó, pendiente de la decisión sobre el
+  nuevo flujo solicitado por APSE.
+
 - Aplicación fase 1 construida desde SaaS Factory Postgres.
 - PRP activo: `../../PRPs/PRP-001-gestion-socios-apse.md`.
 - Implementados: altas, perfil, administración, directorio, eventos, widgets, borradores de
